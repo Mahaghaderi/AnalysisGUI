@@ -144,40 +144,40 @@ class MainWindow(QMainWindow):
         # self.y_slider2.setSingleStep(0.5)
         # self.y_slider3.setSingleStep(0.5)
         
-        self.x_slider.setMinimum(-40)
-        self.x_slider.setMaximum(40)
+        self.x_slider.setMinimum(-60)
+        self.x_slider.setMaximum(60)
         self.x_slider.setValue(0)  # Initial value
 
-        self.y_slider.setMinimum(-40)
-        self.y_slider.setMaximum(40)
+        self.y_slider.setMinimum(-60)
+        self.y_slider.setMaximum(60)
         self.y_slider.setValue(0)  # Initial value
         
-        self.x_slider2.setMinimum(-40)
-        self.x_slider2.setMaximum(40)
+        self.x_slider2.setMinimum(-60)
+        self.x_slider2.setMaximum(60)
         self.x_slider2.setValue(0)  # Initial value
 
-        self.y_slider2.setMinimum(-40)
-        self.y_slider2.setMaximum(40)
+        self.y_slider2.setMinimum(-60)
+        self.y_slider2.setMaximum(60)
         self.y_slider2.setValue(0)  # Initial value
         
-        self.x_slider3.setMinimum(-40)
-        self.x_slider3.setMaximum(40)
+        self.x_slider3.setMinimum(-60)
+        self.x_slider3.setMaximum(60)
         self.x_slider3.setValue(0)  # Initial value
 
-        self.y_slider3.setMinimum(-40)
-        self.y_slider3.setMaximum(40)
+        self.y_slider3.setMinimum(-60)
+        self.y_slider3.setMaximum(60)
         self.y_slider3.setValue(0)  # Initial value
         
-        self.mvc_slider3.setMinimum(-40)
-        self.mvc_slider3.setMaximum(40)
+        self.mvc_slider3.setMinimum(-60)
+        self.mvc_slider3.setMaximum(60)
         self.mvc_slider3.setValue(0)
         
-        self.mvc_slider.setMinimum(-40)
-        self.mvc_slider.setMaximum(40)
+        self.mvc_slider.setMinimum(-60)
+        self.mvc_slider.setMaximum(60)
         self.mvc_slider.setValue(0)
         
-        self.mvc_slider2.setMinimum(-40)
-        self.mvc_slider2.setMaximum(40)
+        self.mvc_slider2.setMinimum(-60)
+        self.mvc_slider2.setMaximum(60)
         self.mvc_slider2.setValue(0)
         
         slider_layout = QHBoxLayout()
