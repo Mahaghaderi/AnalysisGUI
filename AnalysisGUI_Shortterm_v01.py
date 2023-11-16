@@ -14,8 +14,10 @@ from reportlab.platypus import Image
 from PyQt5.QtWidgets import QSlider
 #import scipy.signal as signal
 from scipy.signal import find_peaks
+from matplotlib.figure import Figure
 #from docx import Document
 #from docx.shared import Inches
+
 
 
 class MainWindow(QMainWindow):
@@ -27,7 +29,8 @@ class MainWindow(QMainWindow):
     stiffness_improvement = 0
     def __init__(self):
         super().__init__()
-
+        self.i=0
+        self.points = []
         self.patient_name = ""
         self.x_offset = 0
         self.y_offset = 0
@@ -91,8 +94,10 @@ class MainWindow(QMainWindow):
         main_layout2 = QHBoxLayout()
         # Create the first column (left column) with a QVBoxLayout
         left_column_layout = QVBoxLayout()
+        
         self.fig = plt.figure()
         self.canvas = FigureCanvas(self.fig)
+        self.canvas.mpl_connect('button_press_event', self.on_click)
         self.canvas.setMaximumHeight(400)  # Set the maximum height you desire
         self.canvas.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         left_column_layout.addWidget(self.canvas)
@@ -101,6 +106,7 @@ class MainWindow(QMainWindow):
         right_column_layout = QVBoxLayout()
         button_names = ["TV 5", "TV 50", "TV 100", "TV 120", "MVC", "VOLUNTARY", "ROM", "RMVC_A", "RMVC_B", "RMVC_P"]
         self.buttons = []
+        
         for name in button_names:
             button = QPushButton(name)
             button.clicked.connect(self.plot_chart)
@@ -284,6 +290,35 @@ class MainWindow(QMainWindow):
         right_column_layout2.setContentsMargins(1, 1, 1, 1)
         main_layout.addLayout(pdf_button_layout)
         
+    
+    def on_click(self, event):
+        
+        if event.button == 1:  # Left mouse button
+            x, y = event.xdata, event.ydata
+            self.description_input.append(f'Clicked at x={x}, y={y}')
+            print(f'Clicked at x={x}, y={y}')
+            self.points.append((x, y))
+            #self.axes.plot(x, y, 'ro')  # 'ro' stands for red dot
+            #self.draw()
+
+            # Calculate slope and difference in y-values if there are two points
+            
+            if len(self.points) >= 2 and len(self.points)%2 == 0:
+                
+                x1, y1 = self.points[self.i]
+                x2, y2 = self.points[self.i+1]
+                self.i = self.i + 2
+                slope = (y2 - y1) / (x2 - x1)
+                diff_y = y2 - y1
+                self.description_input.append(f'Slope: {slope}, Difference in y-values: {diff_y}')
+                print(f'Slope: {slope}, Difference in y-values: {diff_y}')
+                
+                
+                
+    def add_point(self, x, y):
+        self.points.append((x, y))
+        self.axes.plot(x, y, 'ro')  # 'ro' stands for red dot
+        self.draw()
         
     def update_x_offset(self):
         value = self.x_slider.value()
@@ -485,9 +520,9 @@ class MainWindow(QMainWindow):
         self.fig.clear()
         passive_parameters = ("DF ROM (Deg)","PF ROM (Deg)", "Stiffness Improvement (%)")
         passive_values = {
-             'Before': (round(self.PR_dorsi[0],2), round(self.PR_plantar[0],2), 0 ),
-             'After 1 session': (round(self.PR_dorsi[2],2), round(self.PR_plantar[2],2), round(self.stiffness_improvement[0],2)),
-             'After 10 sessions': (round(self.PR_dorsi[1],2), round(self.PR_plantar[1],2) ,round(self.stiffness_improvement[1],2)),
+             'Before': (round(self.PR_dorsi[0],1), round(self.PR_plantar[0],1), 0 ),
+             'After 1 session': (round(self.PR_dorsi[2],1), round(self.PR_plantar[2],1), round(self.stiffness_improvement[0],1)),
+             'After 10 sessions': (round(self.PR_dorsi[1],1), round(self.PR_plantar[1],1) ,round(self.stiffness_improvement[1],1)),
         }
 
         x = np.arange(len(passive_parameters))  # the label locations
@@ -532,9 +567,9 @@ class MainWindow(QMainWindow):
         
         #self.mvcd = round(self.mvcd , 2)
         active_values = {
-             'Before': (round(self.mvcd[0], 2) , round(self.mvcp[0], 2) , round(self.AROM[0], 2) , round(self.speed[0], 2)),
-             'After 1 session': (round(self.mvcd[2], 2) , round(self.mvcp[2], 2) , round(self.AROM[2], 2) , round(self.speed[2], 2) ),
-             'After 10 sessions': (round(self.mvcd[1], 2) , round(self.mvcp[1], 2) , round(self.AROM[1], 2) , round(self.speed[1], 2) ),
+             'Before': (round(self.mvcd[0], 1) , round(self.mvcp[0], 1) , round(self.AROM[0], 1) , round(self.speed[0], 1)),
+             'After 1 session': (round(self.mvcd[2], 1) , round(self.mvcp[2], 1) , round(self.AROM[2], 1) , round(self.speed[2], 1) ),
+             'After 10 sessions': (round(self.mvcd[1], 1) , round(self.mvcp[1], 1) , round(self.AROM[1], 1) , round(self.speed[1], 1) ),
         }
 
         x = np.arange(len(active_parameters))  # the label locations
@@ -667,6 +702,7 @@ class MainWindow(QMainWindow):
         self.folders3_tv_directory = [directory_path3_TV5, directory_path3_TV50, directory_path3_TV100, directory_path3_TV120, directory_path3_mvc, directory_path3_voluntary]
     
         self.figure_name = ['5 deg/sec', '50 deg/sec', '100 deg/sec', '120 deg/sec']
+        pass
 
         
         
@@ -1266,8 +1302,12 @@ class MainWindow(QMainWindow):
             line4 = f'Plantar Post: {round(mean_of_min_std_window_l3+self.mvc_offset2,2)}'
             line5 = f'Dorsi After: {round(mean_of_min_std_window_f2+self.mvc_offset3,2)}'
             line6 = f'Plantar After: {round(mean_of_min_std_window_l2+self.mvc_offset3,2)}'
+            line7 = f'Dorsi improvement Pre/Post: {(round(mean_of_min_std_window_f3+self.mvc_offset2,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100}'
+            line8 = f'Plantar improvement Pre/Post: {(round(mean_of_min_std_window_l3+self.mvc_offset2,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100}'
+            line9 = f'Dorsi improvement Pre/After: {(round(mean_of_min_std_window_f2+self.mvc_offset3,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100}'
+            line10 = f'Plantar improvement Pre/After: {(round(mean_of_min_std_window_l2+self.mvc_offset3,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100}'
             
-            mvc_content = [line1,line3,line5,line2,line4,line6]
+            mvc_content = [line1,line3,line5,line2,line4,line6,line7,line8,line9,line10]
             # Convert the list to a string
             mvc_content_str = '\n'.join(mvc_content)
             # Set the text
@@ -1316,13 +1356,17 @@ class MainWindow(QMainWindow):
             # Find extrema and minima in the signal
             maxima_indices, _ = find_peaks(data_voluntary_smoothed)
             minima_indices, _ = find_peaks(-data_voluntary_smoothed)
+                
             maximas = [0] * len(maxima_indices)
             minimas = [0] * len(minima_indices)
             Tmaximas = [0] * len(maxima_indices)
             Tminimas = [0] * len(minima_indices)
 
-            # Calculate the differences between the consecutive extrema and minima
+            #Calculate the differences between the consecutive extrema and minima
             max_diff = -float('inf')
+            maxspeed = -float('inf')
+            diff_maxspeed = 0
+            extrema_with_max_speed = None
             extrema_with_max_diff = None
             for i in range(1, min(len(maxima_indices), len(minima_indices))):
                 maximas[i] = round(data_voluntary_smoothed[maxima_indices[i]],1)
@@ -1330,15 +1374,21 @@ class MainWindow(QMainWindow):
                 Tminimas[i] = t[minima_indices[i]]
                 minimas[i] = round(data_voluntary_smoothed[minima_indices[i]],1)
                 diff = abs(data_voluntary_smoothed[maxima_indices[i]] - data_voluntary_smoothed[minima_indices[i]])
+                if diff > 1 and (abs(Tmaximas[i] - Tminimas[i])> 0.2):
+                   diff_maxspeed = diff/abs(Tmaximas[i] - Tminimas[i])  
                 if diff > max_diff:
                     max_diff = diff
                     extrema_with_max_diff = (maxima_indices[i], minima_indices[i])
+                if diff_maxspeed > maxspeed and diff > 1:
+                    maxspeed = diff_maxspeed
+                    extrema_with_max_speed = (maxima_indices[i], minima_indices[i])
 
-
+            print(extrema_with_max_speed)
             min_value = data_voluntary_smoothed[extrema_with_max_diff[0]]
             max_value = data_voluntary_smoothed[extrema_with_max_diff[1]]
             min_value_str = f'{min_value:.2f}'
             max_value_str = f'{max_value:.2f}'
+            
 
 
             ################################## second data ################################
@@ -1363,18 +1413,29 @@ class MainWindow(QMainWindow):
             # Calculate the differences between the consecutive extrema and minima
             max_diff2 = -float('inf')
             extrema_with_max_diff2 = None
+            maxspeed2 = -float('inf')
+            extrema_with_max_speed2 = None
+            diff_maxspeed2 = 0
+            
+            
             for i2 in range(1, min(len(maxima_indices2), len(minima_indices2))):
                 maximas2[i2] = round(data_voluntary_smoothed2[maxima_indices2[i2]],1)
                 Tmaximas2[i2] = t2[maxima_indices2[i2]]
                 Tminimas2[i2] = t2[minima_indices2[i2]]
                 minimas2[i2] = round(data_voluntary_smoothed2[minima_indices2[i2]],1)
                 diff2 = abs(data_voluntary_smoothed2[maxima_indices2[i2]] - data_voluntary_smoothed2[minima_indices2[i2]])
+                if diff2 > 1 and (abs(Tmaximas2[i2] - Tminimas2[i2])> 0.2):
+                    diff_maxspeed2 = diff2/abs(Tmaximas2[i2] - Tminimas2[i2]) 
                 if diff2 > max_diff2:
                     max_diff2 = diff2
                     extrema_with_max_diff2 = (maxima_indices2[i2], minima_indices2[i2])
-
+                if diff_maxspeed2 > maxspeed2 and diff2 > 1:
+                    maxspeed2 = diff_maxspeed2
+                    extrema_with_max_speed2 = (maxima_indices2[i2], minima_indices2[i2])
+        
             #print(len(Tminimas2))
             #print(len(minimas2))
+            print(extrema_with_max_speed2)
             
             min_value2 = data_voluntary_smoothed2[extrema_with_max_diff2[0]]
             max_value2 = data_voluntary_smoothed2[extrema_with_max_diff2[1]]
@@ -1402,17 +1463,26 @@ class MainWindow(QMainWindow):
             # Calculate the differences between the consecutive extrema and minima
             max_diff3 = -float('inf')
             extrema_with_max_diff3 = None
+            maxspeed3 = -float('inf')
+            extrema_with_max_speed3 = None
+            diff_maxspeed3 = 0
             for i3 in range(1, min(len(maxima_indices3), len(minima_indices3))):
                 diff3 = abs(data_voluntary_smoothed3[maxima_indices3[i3]] - data_voluntary_smoothed3[minima_indices3[i3]])
                 maximas3[i3] = round(data_voluntary_smoothed3[maxima_indices3[i3]],1)
                 Tmaximas3[i3] = t3[maxima_indices3[i3]]
                 Tminimas3[i3] = t3[minima_indices3[i3]]
                 minimas3[i3] = round(data_voluntary_smoothed3[minima_indices3[i3]],1)
+                
+                if diff3 > 1 and (abs(Tmaximas3[i3] - Tminimas3[i3])> 0.2):
+                    diff_maxspeed3 = diff3/abs(Tmaximas3[i3] - Tminimas3[i3]) 
                 if diff3 > max_diff3:
                     max_diff3 = diff3
                     extrema_with_max_diff3 = (maxima_indices3[i3], minima_indices3[i3])
+                if diff_maxspeed3 > maxspeed3 and diff3 > 1:
+                    maxspeed3 = diff_maxspeed3
+                    extrema_with_max_speed3 = (maxima_indices3[i3], minima_indices3[i3])
 
-
+            print(extrema_with_max_speed3)
             min_value3 = data_voluntary_smoothed3[extrema_with_max_diff3[0]]
             max_value3 = data_voluntary_smoothed3[extrema_with_max_diff3[1]]
             min_value_str3 = f'{min_value3:.2f}'
@@ -1420,7 +1490,7 @@ class MainWindow(QMainWindow):
             
             # Patient report
             self.AROM = [abs(max_value-min_value) , abs(max_value2-min_value2) , abs(max_value3-min_value3)]
-            self.speed = [abs(max_value - min_value)/abs(t[extrema_with_max_diff[0]] - t[extrema_with_max_diff[1]]) ,abs(max_value2 - min_value2)/abs(t[extrema_with_max_diff2[1]] - t[extrema_with_max_diff2[0]]) ,abs(max_value3 - min_value3)/abs(t[extrema_with_max_diff3[0]] - t[extrema_with_max_diff3[1]])]
+            self.speed = [maxspeed ,maxspeed3 ,maxspeed2]
             #print(self.speed)
             #print(abs(t[extrema_with_max_diff[0]] - t[extrema_with_max_diff[1]]))
             #print(abs(max_value - min_value))
@@ -1428,12 +1498,13 @@ class MainWindow(QMainWindow):
             self.speedimprovement = [ ((self.speed[2]-self.speed[0])/self.speed[0])*100 , ((self.speed[1]-self.speed[0])/self.speed[0])*100 ]
             self.AROMimprovement = [ ((self.AROM[2]-self.AROM[0])/self.AROM[0])*100 , ((self.AROM[1]-self.AROM[0])/self.AROM[0])*100 ]
             
-            
+            line00 = f"Max Speeds: Pre:{maxspeed:.2f} , Post:{maxspeed3:.2f} , After:{maxspeed2:.2f} "
+            line01 = f"Max AROMs: Pre:{self.AROM[0]:.2f} , Post:{self.AROM[1]:.2f} , After:{self.AROM[2]:.2f} "
             line1 = f"Speed improvement pre/post: {self.speedimprovement[0]:.2f} %"
             line2 = f"Speed improvement long-term: {self.speedimprovement[1]:.2f} %"
             line3 = f"AROM improvement pre/post: {self.AROMimprovement[0]:.2f} %"
             line4 = f"AROM improvement long-term: {self.AROMimprovement[1]:.2f} %"
-            voluntary_content = [line1,line2,line3,line4]
+            voluntary_content = [line00,line01,line1,line2,line3,line4]
             # Convert the list to a string
             voluntary_content_str = '\n'.join(voluntary_content)
             # Set the text
@@ -1443,12 +1514,12 @@ class MainWindow(QMainWindow):
             ax4 = self.fig.add_subplot(311)
             ax4.plot(t , data_voluntary_smoothed,label='Before')
             ax4.set_ylabel('Position (deg)')
-            ax4.scatter(Tmaximas, maximas , c='g')
-            ax4.scatter(Tminimas, minimas , c='g')
-            for i, txt in enumerate(maximas):
-                ax4.text(Tmaximas[i], maximas[i], str(txt), ha='right', va='bottom')
-            for i, txt in enumerate(minimas):
-                ax4.text(Tminimas[i], minimas[i], str(txt), ha='right', va='top')
+            # ax4.scatter(Tmaximas, maximas , c='g')
+            # ax4.scatter(Tminimas, minimas , c='g')
+            # for i, txt in enumerate(maximas):
+            #     ax4.text(Tmaximas[i], maximas[i], str(txt), ha='right', va='bottom')
+            # for i, txt in enumerate(minimas):
+            #     ax4.text(Tminimas[i], minimas[i], str(txt), ha='right', va='top')
                 
             ax4.scatter(t[extrema_with_max_diff[1]], data_voluntary_smoothed[extrema_with_max_diff[1]] , c='r')
             ax4.scatter(t[extrema_with_max_diff[0]], data_voluntary_smoothed[extrema_with_max_diff[0]] , c='r')
@@ -1462,12 +1533,12 @@ class MainWindow(QMainWindow):
             ax5 = self.fig.add_subplot(313)
             ax5.plot(t2 ,data_voluntary_smoothed2, label='After')
             ax5.set_ylabel('Position (deg)')
-            ax5.scatter(Tmaximas2, maximas2 , c='g')
-            ax5.scatter(Tminimas2, minimas2 , c='g')
-            for i2, txt2 in enumerate(maximas2):
-                ax5.text(Tmaximas2[i2], maximas2[i2], str(txt2), ha='right', va='bottom')
-            for i2, txt2 in enumerate(minimas2):
-                ax5.text(Tminimas2[i2], minimas2[i2], str(txt2), ha='right', va='top')
+            # ax5.scatter(Tmaximas2, maximas2 , c='g')
+            # ax5.scatter(Tminimas2, minimas2 , c='g')
+            # for i2, txt2 in enumerate(maximas2):
+            #     ax5.text(Tmaximas2[i2], maximas2[i2], str(txt2), ha='right', va='bottom')
+            # for i2, txt2 in enumerate(minimas2):
+            #     ax5.text(Tminimas2[i2], minimas2[i2], str(txt2), ha='right', va='top')
                 
             ax5.scatter(t2[extrema_with_max_diff2[1]], data_voluntary_smoothed2[extrema_with_max_diff2[1]], c='r')
             ax5.scatter(t2[extrema_with_max_diff2[0]], data_voluntary_smoothed2[extrema_with_max_diff2[0]] , c='r')
@@ -1479,12 +1550,12 @@ class MainWindow(QMainWindow):
             ax5 = self.fig.add_subplot(312)
             ax5.plot(t3,data_voluntary_smoothed3, label='Post')
             ax5.set_ylabel('Position (deg)')
-            ax5.scatter(Tmaximas3, maximas3 , c='g')
-            ax5.scatter(Tminimas3, minimas3 , c='g')
-            for i3, txt3 in enumerate(maximas3):
-                ax5.text(Tmaximas3[i3], maximas3[i3], str(txt3), ha='right', va='bottom')
-            for i3, txt3 in enumerate(minimas3):
-                ax5.text(Tminimas3[i3], minimas3[i3], str(txt3), ha='right', va='top')
+            # ax5.scatter(Tmaximas3, maximas3 , c='g')
+            # ax5.scatter(Tminimas3, minimas3 , c='g')
+            # for i3, txt3 in enumerate(maximas3):
+            #     ax5.text(Tmaximas3[i3], maximas3[i3], str(txt3), ha='right', va='bottom')
+            # for i3, txt3 in enumerate(minimas3):
+            #     ax5.text(Tminimas3[i3], minimas3[i3], str(txt3), ha='right', va='top')
                 
             ax5.scatter(t3[extrema_with_max_diff3[1]], data_voluntary_smoothed3[extrema_with_max_diff3[1]] , c='r')
             ax5.scatter(t3[extrema_with_max_diff3[1]], data_voluntary_smoothed3[extrema_with_max_diff3[1]] , c='r')
@@ -1597,7 +1668,8 @@ class MainWindow(QMainWindow):
             # ax7.text(0.3, 0.88, f'PI after: {round(float(plantarImprovement),0)} %', ha='right', va='top', transform=plt.gca().transAxes) 
             # ax7.text(0.3, 0.78, f'DI before/post: {round(float(dorsiImprovementpost),0)} %', ha='right', va='top', transform=plt.gca().transAxes) 
             # ax7.text(0.3, 0.68, f'PI before/post: {round(float(plantarImprovementpost),0)} %', ha='right', va='top', transform=plt.gca().transAxes) 
-            # self.canvas.draw()
+        pass
+    # self.canvas.draw()
 
             
 if __name__ == '__main__':
