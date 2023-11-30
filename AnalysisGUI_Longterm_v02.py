@@ -21,6 +21,7 @@ class MainWindow(QMainWindow):
     count = 0
     count1 = 0
     stiffness_improvement = 0
+    tvc = 0
     def __init__(self):
         super().__init__()
         self.i=0
@@ -97,7 +98,7 @@ class MainWindow(QMainWindow):
 
         # Create the second column (right column) with a QVBoxLayout
         right_column_layout = QVBoxLayout()
-        button_names = ["TV 5", "TV 50", "TV 100", "TV 120", "MVC", "VOLUNTARY", "ROM", "RMVC_l2", "RMVC_B", "RMVC_l1"]
+        button_names = ["TV 5", "TV 50", "TV 100", "TV 120", "MVC", "VOLUNTARY", "ROM", "RMVC_l2", "RMVC_B", "RMVC_l1" ,"ChangeCycle"]
         self.buttons = []
         for name in button_names:
             button = QPushButton(name)
@@ -388,6 +389,7 @@ class MainWindow(QMainWindow):
             return
         
         describ = self.description_input.toPlainText()
+        
         # Replace newline characters with HTML line break tags
         describ_html = describ.replace('\n', '<br />')
 
@@ -396,6 +398,7 @@ class MainWindow(QMainWindow):
         styles = getSampleStyleSheet()
         comment_paragraph_d = Paragraph(describ_html, styles['Normal'])
         self.story.append(comment_paragraph_d)
+        
         
         
     def save_to_pdf(self):
@@ -707,14 +710,29 @@ class MainWindow(QMainWindow):
             return
         
         button_index = self.buttons.index(self.sender())
+        if button_index == 10:
+            cyclenumber = ['Cycle 1' , 'Cycle 2' , 'Cycle 3']
+            if self.tvc == 2: 
+                self.tvc=0 
+                self.description_input.append(f'TV Cycle was changed to {cyclenumber[self.tvc]}')
+                print(cyclenumber[self.tvc])
+            else:
+                self.tvc = self.tvc + 1
+                self.description_input.append(f'TV Cycle was changed to {cyclenumber[self.tvc]}')
+                print(cyclenumber[self.tvc])
+                
         if button_index == 0:
             data = pd.read_csv(self.data1_tv_directory[0])
             # Read the CSV file for X-axis data (position_tv)
             position_tv_w = data['Position(rad)']*180/np.pi
-            position_tv = position_tv_w.iloc[(len(position_tv_w)//3):2*(len(position_tv_w)//3)]
+            TvCycles_position = [0 , (len(position_tv_w)//3) , 2*(len(position_tv_w)//3) , len(position_tv_w) ]
+            position_tv = position_tv_w.iloc[TvCycles_position[self.tvc]:TvCycles_position[self.tvc+1]]
+            
              # Read the CSV file for Y-axis data (torque_tv)
             torque_tv_w = data['Torque(Mz)']
-            torque_tv = -1*torque_tv_w.iloc[(len(torque_tv_w)//3):2*(len(torque_tv_w)//3)]
+            TvCycles_torque = [0 , (len(torque_tv_w)//3) , 2*(len(torque_tv_w)//3) , len(torque_tv_w) ]
+            torque_tv = -1*torque_tv_w.iloc[TvCycles_torque[self.tvc]:TvCycles_torque[self.tvc+1]]
+            
              # Apply moving average smoothing to X and Y data
             window_length = 600  
             position_smoothed_tv = position_tv.rolling(window_length, min_periods=1).mean()
@@ -730,13 +748,22 @@ class MainWindow(QMainWindow):
             data2 = pd.read_csv(self.data2_tv_directory[0])
             data3 = pd.read_csv(self.data3_tv_directory[0])
             # Read the first CSV file for X-axis data
-            position_tv_2 = (data2['Position(rad)'].iloc[(len(data2['Position(rad)'])//3):2*(len(data2['Position(rad)'])//3)])*180/np.pi
+            position_tv_w2 = data2['Position(rad)']
+            TvCycles_position2 = [0 , (len(position_tv_w2)//3) , 2*(len(position_tv_w2)//3) , len(position_tv_w2) ]
+            position_tv_2 = (data2['Position(rad)'].iloc[TvCycles_position2[self.tvc]:TvCycles_position2[self.tvc+1]])*180/np.pi
+            
             # Read the second CSV file for Y-axis data
-            torque_tv_2 = -1*data2['Torque(Mz)'].iloc[(len(data2['Torque(Mz)'])//3):2*(len(data2['Torque(Mz)'])//3)]
-           
-            position_tv_3 = (data3['Position(rad)'].iloc[(len(data3['Position(rad)'])//3):2*(len(data3['Position(rad)'])//3)])*180/np.pi
+            torque_tv_w2 = -1*data2['Torque(Mz)']
+            TvCycles_torque2 = [0 , (len(torque_tv_w2)//3) , 2*(len(torque_tv_w2)//3) , len(torque_tv_w2) ]
+            torque_tv_2 = -1*data2['Torque(Mz)'].iloc[TvCycles_torque2[self.tvc]:TvCycles_torque2[self.tvc+1]]
+            
+            position_tv_w3 = data3['Position(rad)']
+            TvCycles_position3 = [0 , (len(position_tv_w3)//3) , 2*(len(position_tv_w3)//3) , len(position_tv_w3) ]
+            position_tv_3 = (data3['Position(rad)'].iloc[TvCycles_position3[self.tvc]:TvCycles_position3[self.tvc+1]])*180/np.pi
             # Read the second CSV file for Y-axis data
-            torque_tv_3 = -1*data3['Torque(Mz)'].iloc[(len(data3['Torque(Mz)'])//3):2*(len(data3['Torque(Mz)'])//3)]
+            torque_tv_w3 = -1*data3['Torque(Mz)']
+            TvCycles_torque3 = [0 , (len(torque_tv_w3)//3) , 2*(len(torque_tv_w3)//3) , len(torque_tv_w3) ]
+            torque_tv_3 = -1*data3['Torque(Mz)'].iloc[TvCycles_torque3[self.tvc]:TvCycles_torque3[self.tvc+1]]
             
             # Apply moving average smoothing to X and Y data
             window_length = 600  # Adjust the window length as desired
@@ -803,7 +830,11 @@ class MainWindow(QMainWindow):
             with open(file_path_neutral_position_tv_3, 'r') as file3:
                 Neutralposition_tv_after = file3.read()
         
-            self.stiffness_improvement = [(((torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):].mean()) - (torque_sampled3.diff().iloc[round(len(torque_sampled3.diff())/2):].mean()))/(torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):].mean()))*100 , (((torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):].mean()) - (torque_sampled2.diff().iloc[round(len(torque_sampled2.diff())/2):].mean()))/(torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):].mean()))*100]
+            min_stiffness_rom_post = min(len(torque_sampled.diff()) , len(torque_sampled3.diff()) )
+            min_stiffness_rom_after = min(len(torque_sampled.diff()) , len(torque_sampled2.diff()))
+            self.stiffness_improvement = [(((torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):min_stiffness_rom_post].mean()) - (torque_sampled3.diff().iloc[round(len(torque_sampled3.diff())/2):min_stiffness_rom_post].mean()))/(torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):min_stiffness_rom_post].mean()))*100 , (((torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):min_stiffness_rom_after].mean()) - (torque_sampled2.diff().iloc[round(len(torque_sampled2.diff())/2):min_stiffness_rom_after].mean()))/(torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):min_stiffness_rom_after].mean()))*100]
+            self.description_input.append(f'Stiffness Improvement pre/long1: {round(self.stiffness_improvement[0],2)}%')
+            self.description_input.append(f'Stiffness Improvement pre/long2: {round(self.stiffness_improvement[1],2)}%')
             #self.stiffness_improvement = [1,2]
             
             # Plot the Spasticity
