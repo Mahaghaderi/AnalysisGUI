@@ -27,7 +27,18 @@ class MainWindow(QMainWindow):
     count = 0
     count1 = 0
     stiffness_improvement = 0
+    lbl1 = ''
+    lbl2 = ''
+    lbl3 = ''
+    chrtlbl1 = ''
+    chrtlbl2 = ''
+    chrtlbl3 = ''
     tvc = 0
+    stfnss = []
+    rom1 = 0
+    rom2 = 0
+    rom3 = 0
+    
     def __init__(self):
         super().__init__()
         self.i=0
@@ -42,6 +53,16 @@ class MainWindow(QMainWindow):
         self.mvc_offset = 0
         self.mvc_offset2 = 0
         self.mvc_offset3 = 0
+        
+        self.lbl1 = 'pre'
+        self.lbl2 = 'post'
+        self.lbl3 = 'long'
+        
+        self.chrtlbl1 = 'Before'
+        self.chrtlbl2 = 'After 1 session'
+        self.chrtlbl3 = 'After 10 session'
+        
+        self.stfnss = []
         
         self.setWindowTitle("Data Analysis")
         self.setGeometry(100, 100, 1200, 800)
@@ -59,28 +80,32 @@ class MainWindow(QMainWindow):
         self.name_input = QLineEdit()
         self.confirm_button = QPushButton("Confirm")
         self.confirm_button.clicked.connect(self.save_patient_name)
+        self.switch_button = QPushButton("Change to long-term")
+        self.switch_button.setCheckable(True)
+        self.switch_button.clicked.connect(self.changetolongterm)
         name_layout = QHBoxLayout()
         name_layout.addWidget(name_label)
         name_layout.addWidget(self.name_input)
         name_layout.addWidget(self.confirm_button)
+        name_layout.addWidget(self.switch_button)
         main_layout.addLayout(name_layout)
         
 
         data_title_layout = QHBoxLayout()
         data_input_layout = QHBoxLayout()
-        data_label = QLabel("Enter the path of the dataset1 considered as before:")
+        self.data_label = QLabel("Enter the path of the dataset1 considered as pre:")
         self.dir_input = QLineEdit()
-        data_label3 = QLabel("Enter the path of the dataset2 considered as post:")
+        self.data_label3 = QLabel("Enter the path of the dataset2 considered as post:")
         self.dir_input3 = QLineEdit()
-        data_label2 = QLabel("Enter the path of the dataset3 considered as after:")
+        self.data_label2 = QLabel("Enter the path of the dataset3 considered as long:")
         self.dir_input2 = QLineEdit()
         plot_button2 = QPushButton("Set")
         plot_button2.clicked.connect(self.upload_data)
-        data_title_layout.addWidget(data_label)
+        data_title_layout.addWidget(self.data_label)
         data_input_layout.addWidget(self.dir_input)
-        data_title_layout.addWidget(data_label3)
+        data_title_layout.addWidget(self.data_label3)
         data_input_layout.addWidget(self.dir_input3)
-        data_title_layout.addWidget(data_label2)
+        data_title_layout.addWidget(self.data_label2)
         data_input_layout.addWidget(self.dir_input2)
         
         main_layout.addLayout(data_title_layout)
@@ -105,7 +130,7 @@ class MainWindow(QMainWindow):
 
         # Create the second column (right column) with a QVBoxLayout
         right_column_layout = QVBoxLayout()
-        button_names = ["TV 5", "TV 50", "TV 100", "TV 120", "MVC", "VOLUNTARY", "ROM", "RMVC_A", "RMVC_B", "RMVC_P","ChangeCycle"]
+        button_names = ["TV 5", "TV 50", "TV 100", "TV 120", "MVC", "Voluntary", "ROM", "RMVC3", "RMVC1", "RMVC2","ChangeCycle"]
         self.buttons = []
         
         for name in button_names:
@@ -198,22 +223,23 @@ class MainWindow(QMainWindow):
         slider_layout.addWidget(self.mvc_slider2)
         slider_layout.addWidget(self.mvc_slider3)
         
-        slider_labelx = QLabel("X Before")
-        slider_labely = QLabel("Y Before")
-        slider_labelx2 = QLabel("X After")
-        slider_labely2 = QLabel("Y After")
-        slider_labelx3 = QLabel("X Post")
-        slider_labely3 = QLabel("Y Post")
-        slider_labelmvc = QLabel("mvc Before")
-        slider_labelmvc2 = QLabel("mvc Post")
-        slider_labelmvc3 = QLabel("mvc After")
+        slider_labelx = QLabel("X1")
+        slider_labely = QLabel("Y1")
+        slider_labelx2 = QLabel("X3")
+        slider_labely2 = QLabel("Y3")
+        slider_labelx3 = QLabel("X2")
+        slider_labely3 = QLabel("Y2")
+        slider_labelmvc = QLabel("mvc1")
+        slider_labelmvc2 = QLabel("mvc2")
+        slider_labelmvc3 = QLabel("mvc3")
         slider_label_layout = QHBoxLayout()
         slider_label_layout.addWidget(slider_labelx)
         slider_label_layout.addWidget(slider_labely)
-        slider_label_layout.addWidget(slider_labelx2)
-        slider_label_layout.addWidget(slider_labely2)
         slider_label_layout.addWidget(slider_labelx3)
         slider_label_layout.addWidget(slider_labely3)
+        slider_label_layout.addWidget(slider_labelx2)
+        slider_label_layout.addWidget(slider_labely2)
+        
         slider_label_layout.addWidget(slider_labelmvc)
         slider_label_layout.addWidget(slider_labelmvc2)
         slider_label_layout.addWidget(slider_labelmvc3)
@@ -268,7 +294,7 @@ class MainWindow(QMainWindow):
         # Add QTextEdit for description
         description = QLabel("Description:")
         self.description_input = QTextEdit()
-        self.description_input.setMaximumHeight(100)  # Set the maximum height you desire
+        self.description_input.setMaximumHeight(130)  # Set the maximum height you desire
         self.description_input.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         plot_button_description = QPushButton("Add Description")
         plot_button_description.clicked.connect(self.description)
@@ -283,6 +309,9 @@ class MainWindow(QMainWindow):
         generate_patient_report_button = QPushButton("Patient Report")
         generate_patient_report_button.clicked.connect(self.generate_patient_report)
         left_column_layout2.addWidget(generate_patient_report_button)
+        generate_manual_patient_report_button = QPushButton("Manual Patient Report")
+        generate_manual_patient_report_button.clicked.connect(self.open_patient_report_window)
+        left_column_layout2.addWidget(generate_manual_patient_report_button)
         
         pdf_button_layout.addLayout(right_column_layout2,4)  # The right layout's stretch factor defaults to 1
         pdf_button_layout.addLayout(left_column_layout2)  # Set the left layout's stretch factor to 4
@@ -290,7 +319,222 @@ class MainWindow(QMainWindow):
         left_column_layout2.setContentsMargins(1, 1, 1, 1)
         right_column_layout2.setContentsMargins(1, 1, 1, 1)
         main_layout.addLayout(pdf_button_layout)
+    
+    def open_patient_report_window(self):
+        self.main_widget = QWidget()
+        pmain_layout = QVBoxLayout(self.main_widget)
+        #self.setWindowTitle("Manual Patient Report")
+        pmain_layout.setContentsMargins(15, 15, 15, 15)  
+
+        patient_report_container = QWidget()
+        main_patient_report_layout = QVBoxLayout(patient_report_container)
         
+        format_label =  QLabel("Please enter your data in the format: [pre , post/long1 , After/long2]")
+        main_patient_report_layout.addWidget(format_label)
+        
+        dfrom_label = QLabel("Dorsiflexion:")
+        self.dfrom_box = QLineEdit()
+        main_patient_report_layout.addWidget(dfrom_label)
+        main_patient_report_layout.addWidget(self.dfrom_box)
+        
+        
+        pfrom_label = QLabel("Plantarflexion:")
+        self.pfrom_box = QLineEdit()
+        main_patient_report_layout.addWidget(pfrom_label)
+        main_patient_report_layout.addWidget(self.pfrom_box)
+        
+        
+        rom_label = QLabel("Passive ROM:")
+        self.rom_box = QLineEdit()
+        main_patient_report_layout.addWidget(rom_label)
+        main_patient_report_layout.addWidget(self.rom_box)
+       
+        
+        stiffness_label = QLabel("Stiffness:")
+        self.stiffness_box = QLineEdit()
+        main_patient_report_layout.addWidget(stiffness_label)
+        main_patient_report_layout.addWidget(self.stiffness_box)
+        
+        
+        mvcp_label = QLabel("MVC plantar:")
+        self.mvcp_box = QLineEdit()
+        main_patient_report_layout.addWidget(mvcp_label)
+        main_patient_report_layout.addWidget(self.mvcp_box)
+        
+        
+        mvcd_label = QLabel("MVC dorsi:")
+        self.mvcd_box = QLineEdit()
+        main_patient_report_layout.addWidget(mvcd_label)
+        main_patient_report_layout.addWidget(self.mvcd_box)
+        
+        
+        arom_label = QLabel("Active ROM:")
+        self.arom_box = QLineEdit()
+        main_patient_report_layout.addWidget(arom_label)
+        main_patient_report_layout.addWidget(self.arom_box)
+        
+        
+        speed_label = QLabel("Speed:")
+        self.speed_box = QLineEdit()
+        main_patient_report_layout.addWidget(speed_label)
+        main_patient_report_layout.addWidget(self.speed_box)
+        
+    
+        gnrte_patient_report_button = QPushButton("Generate PDF")
+        gnrte_patient_report_button.clicked.connect(self.plot_chart_patient_report_manual)
+        main_patient_report_layout.addWidget(gnrte_patient_report_button)
+        
+        pmain_layout.addWidget(patient_report_container)
+        
+        self.main_widget.show()
+        
+    def plot_chart_patient_report_manual(self):
+        pdf_filename = self.patient_name
+        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+        styles = getSampleStyleSheet()
+        if self.count1 == 0 :
+            title = Paragraph(self.patient_name, styles['Title'])
+            self.patient_story.append(title)
+            
+        pspeed_str = self.speed_box.text()
+        self.pspeed = [float(x) for x in pspeed_str.strip('[]').split(',')]
+        pAROM_str = self.arom_box.text()
+        self.pAROM = [float(x) for x in pAROM_str.strip('[]').split(',')]
+        pmvcd_str = self.mvcd_box.text()
+        self.pmvcd = [float(x) for x in pmvcd_str.strip('[]').split(',')]
+        pmvcp_str = self.mvcp_box.text()
+        self.pmvcp = [float(x) for x in pmvcp_str.strip('[]').split(',')]
+        pstiffness_str = self.stiffness_box.text()
+        self.pstiffness = [float(x) for x in pstiffness_str.strip('[]').split(',')]
+        rom_str = self.rom_box.text()
+        self.rom = [float(x) for x in rom_str.strip('[]').split(',')]
+        pPR_plantar_str = self.pfrom_box.text()
+        self.pPR_plantar = [float(x) for x in pPR_plantar_str.strip('[]').split(',')]
+        pPR_dorsi_str = self.dfrom_box.text()
+        self.pPR_dorsi = [float(x) for x in pPR_dorsi_str.strip('[]').split(',')]
+        
+        self.fig.clear()
+        passive_parameters = ("DF (Deg)","PF (Deg)", "ROM" ,"Stiffness")
+        passive_values = {
+             self.chrtlbl1: (round(self.pPR_dorsi[0],1), round(self.pPR_plantar[0],1) , round(self.rom[0],1) , round(self.pstiffness[0],1)),
+             self.chrtlbl2: (round(self.pPR_dorsi[1],1), round(self.pPR_plantar[1],1), round(self.rom[1],1), round(self.pstiffness[1],1)),
+             self.chrtlbl3: (round(self.pPR_dorsi[2],1), round(self.pPR_plantar[2],1), round(self.rom[2],1) ,round(self.pstiffness[2],1)),
+        }
+
+        x = np.arange(len(passive_parameters))  # the label locations
+        width = 0.15  # the width of the bars
+        multiplier = 0
+
+        #fig, ax = plt.subplots(subplot_kw={'constraint': 'tight'})
+        ax = self.fig.add_subplot(111)
+
+        for attribute, measurement in passive_values.items():
+            offset = width * multiplier
+            rects = ax.bar(x + offset, measurement, width, label=attribute)
+            #ax.bar_label(rects, padding=3)
+            multiplier += 1
+
+         # Add some text for labels, title and custom x-axis tick labels, etc.
+        ax.set_title('Passive Parameters')
+        ax.set_xticks(x + width, passive_parameters)
+        ax.legend(loc='upper left', ncols=3)
+        #ax.set_ylim(0, 250)
+        
+        
+        self.canvas.draw()
+        image_filename = f"chart_image1_{self.count1}.png"
+        self.fig.savefig(image_filename)
+        # Add the image to the PDF
+        img = plt.imread(image_filename)
+        img_width = 520  # Adjust the image width as needed
+        img_height = img_width * img.shape[0] / img.shape[1]
+        img_flowable = Image(image_filename, width=img_width, height=img_height)
+        self.patient_story.append(img_flowable)
+        self.patient_story.append(Spacer(1, 12))
+        #self.patient_story.append(Spacer(1, 12))
+        self.count1 = self.count1+1
+        
+        
+        
+        #ax.clear()
+        self.fig.clf()
+        self.fig.clear()
+        ax1 = self.fig.add_subplot(111)
+        active_parameters = ("DF MVC (Nm)","PF MVC (Nm)", "Active ROM (deg)", "Speed (deg/sec)")
+        
+        #self.mvcd = round(self.mvcd , 2)
+        active_values = {
+             self.chrtlbl1: (round(self.pmvcd[0], 1) , round(self.pmvcp[0], 1) , round(self.pAROM[0], 1) , round(self.pspeed[0], 1)),
+             self.chrtlbl2: (round(self.pmvcd[1], 1) , round(self.pmvcp[1], 1) , round(self.pAROM[1], 1) , round(self.pspeed[1], 1)),
+             self.chrtlbl3: (round(self.pmvcd[2], 1) , round(self.pmvcp[2], 1) , round(self.pAROM[2], 1) , round(self.pspeed[2], 1)),
+        }
+
+        x = np.arange(len(active_parameters))  # the label locations
+        width = 0.15  # the width of the bars
+        multiplier = 0
+
+        #fig, ax1 = plt.subplots(layout='constrained')
+
+        for attribute, measurement in active_values.items():
+                offset = width * multiplier
+                rects = ax1.bar(x + offset, measurement, width, label=attribute)
+                #ax1.bar_label(rects, padding=3)
+                multiplier += 1
+
+        # Add some text for labels, title and custom x-axis tick labels, etc.
+        ax1.set_title('Active Parameters')
+        #plt.tight_layout() 
+        ax1.set_xticks(x + width, active_parameters)
+        ax1.legend(loc='upper left', ncols=3)
+        #ax1.set_ylim(0, 250)
+
+        #self.fig.clear()
+        #self.fig.canvas.draw()
+        self.canvas.draw()
+        image_filename = f"chart_image1_{self.count1}.png"
+        self.fig.savefig(image_filename)
+        # Add the image to the PDF
+        img = plt.imread(image_filename)
+        img_width = 520  # Adjust the image width as needed
+        img_height = img_width * img.shape[0] / img.shape[1]
+        img_flowable = Image(image_filename, width=img_width, height=img_height)
+        self.patient_story.append(img_flowable)
+        #self.patient_story.append(Spacer(1, 12))
+        self.patient_story.append(Spacer(1, 12))
+        self.count1 = self.count1+1
+        
+        pdf_filename = self.patient_name + "_manualPatientReport.pdf"
+        doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+        styles = getSampleStyleSheet()
+        if self.count1 == 0 :
+            title = Paragraph(self.patient_name, styles['Title'])
+            self.patient_story.append(title)
+            
+        self.patient_story.append(Spacer(1, 12))
+        
+        #self.plot_chart_patient_report()
+        patient_story = self.patient_story
+        # Build the PDF
+        doc.build(patient_story) 
+        
+        # Create a Document
+        # doc1 = Document()
+        # # Add content to the Document
+        # for item in self.patient_story:
+        #     if isinstance(item, str):
+        #         doc1.add_paragraph(item)
+        #     elif isinstance(item, str):  # Assuming the image path is stored as a string
+        #         doc1.add_picture(item, width=Inches(5)) # Adjust the width as needed
+        # # Save the Document
+        # doc1.save(self.patient_name + 'patient_story.docx')
+
+        # Inform the user that the PDF has been saved
+        info_dialog = QMessageBox(self)
+        info_dialog.setIcon(QMessageBox.Information)
+        info_dialog.setWindowTitle("Info")
+        info_dialog.setText("Patient Report was generated successfully.")
+        info_dialog.setStandardButtons(QMessageBox.Ok)
+        info_dialog.exec_()
     
     def on_click(self, event):
         
@@ -375,11 +619,37 @@ class MainWindow(QMainWindow):
         self.plot_chart()
         print(value)
         
+    def changetolongterm(self):
+        if self.switch_button.isChecked():
+            self.data_label.setText("Enter the path of the dataset1 considered as pre:")
+            self.data_label3.setText("Enter the path of the dataset2 considered as long1:")
+            self.data_label2.setText("Enter the path of the dataset3 considered as long2:")
+            
+            self.lbl1 = 'pre'
+            self.lbl2 = 'long1'
+            self.lbl3 = 'long2'
+            
+            self.chrtlbl1 = 'Before'
+            self.chrtlbl2 = 'After 10 session'
+            self.chrtlbl3 = 'After 20 session'
+        else:
+            self.data_label.setText("Enter the path of the dataset1 considered as pre:")
+            self.data_label3.setText("Enter the path of the dataset2 considered as post:")
+            self.data_label2.setText("Enter the path of the dataset3 considered as long:")
+            
+            self.lbl1 = 'pre'
+            self.lbl2 = 'post'
+            self.lbl3 = 'long'
+            
+            self.chrtlbl1 = 'Before'
+            self.chrtlbl2 = 'After 1 session'
+            self.chrtlbl3 = 'After 10 session'
+        
     def save_patient_name(self):
-            self.patient_name = self.name_input.text()
-            self.count = 0
-            self.count1 = 0
-            print("Patient Name:", self.patient_name)
+        self.patient_name = self.name_input.text()
+        self.count = 0
+        self.count1 = 0
+        print("Patient Name:", self.patient_name)
     
     def description(self):
         if not hasattr(self, 'data1_tv_directory') or not hasattr(self, 'data2_tv_directory') or not hasattr(self, 'data3_tv_directory'):
@@ -519,11 +789,11 @@ class MainWindow(QMainWindow):
     
     def plot_chart_patient_report(self):
         self.fig.clear()
-        passive_parameters = ("DF ROM (Deg)","PF ROM (Deg)", "Stiffness Improvement (%)")
+        passive_parameters = ("DF (Deg)","PF (Deg)", "ROM (Deg)", "Stiffness")
         passive_values = {
-             'Before': (round(self.PR_dorsi[0],1), round(self.PR_plantar[0],1), 0 ),
-             'After 1 session': (round(self.PR_dorsi[2],1), round(self.PR_plantar[2],1), round(self.stiffness_improvement[0],1)),
-             'After 10 sessions': (round(self.PR_dorsi[1],1), round(self.PR_plantar[1],1) ,round(self.stiffness_improvement[1],1)),
+             self.chrtlbl1: (round(self.PR_dorsi[0],1), round(self.PR_plantar[0],1) , round(self.rom1,1) , round(self.stfnss[0],1) ),
+             self.chrtlbl2: (round(self.PR_dorsi[2],1), round(self.PR_plantar[2],1), round(self.rom2,1) ,round(self.stfnss[1],1)),
+             self.chrtlbl3: (round(self.PR_dorsi[1],1), round(self.PR_plantar[1],1), round(self.rom3,1) ,round(self.stfnss[2],1)),
         }
 
         x = np.arange(len(passive_parameters))  # the label locations
@@ -536,7 +806,7 @@ class MainWindow(QMainWindow):
         for attribute, measurement in passive_values.items():
             offset = width * multiplier
             rects = ax.bar(x + offset, measurement, width, label=attribute)
-            ax.bar_label(rects, padding=3)
+            #ax.bar_label(rects, padding=3)
             multiplier += 1
 
          # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -568,9 +838,9 @@ class MainWindow(QMainWindow):
         
         #self.mvcd = round(self.mvcd , 2)
         active_values = {
-             'Before': (round(self.mvcd[0], 1) , round(self.mvcp[0], 1) , round(self.AROM[0], 1) , round(self.speed[0], 1)),
-             'After 1 session': (round(self.mvcd[2], 1) , round(self.mvcp[2], 1) , round(self.AROM[1], 1) , round(self.speed[1], 1) ),
-             'After 10 sessions': (round(self.mvcd[1], 1) , round(self.mvcp[1], 1) , round(self.AROM[2], 1) , round(self.speed[2], 1) ),
+             self.chrtlbl1: (round(self.mvcd[0], 1) , round(self.mvcp[0], 1) , round(self.AROM[0], 1) , round(self.speed[0], 1)),
+             self.chrtlbl2: (round(self.mvcd[2], 1) , round(self.mvcp[2], 1) , round(self.AROM[1], 1) , round(self.speed[1], 1) ),
+             self.chrtlbl3: (round(self.mvcd[1], 1) , round(self.mvcp[1], 1) , round(self.AROM[2], 1) , round(self.speed[2], 1) ),
         }
 
         x = np.arange(len(active_parameters))  # the label locations
@@ -582,7 +852,7 @@ class MainWindow(QMainWindow):
         for attribute, measurement in active_values.items():
                 offset = width * multiplier
                 rects = ax1.bar(x + offset, measurement, width, label=attribute)
-                ax1.bar_label(rects, padding=3)
+                #ax1.bar_label(rects, padding=3)
                 multiplier += 1
 
         # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -757,10 +1027,22 @@ class MainWindow(QMainWindow):
             position_smoothed_tv = position_smoothed_tv + self.x_offset
             torque_smoothed_tv = torque_smoothed_tv + self.y_offset
              # Calculate the spasticity by Sampling the data frame at the specified interval
-            sampling_interval = 150
-            position_sampled = position_smoothed_tv.iloc[:len(position_smoothed_tv)//2:sampling_interval]
-            torque_sampled = torque_smoothed_tv.iloc[:len(torque_smoothed_tv)//2:sampling_interval]
-            dy_torque_sampled = torque_sampled.diff().iloc[:].values
+            sampling_interval = 300
+            position_sampled = position_smoothed_tv.iloc[:len(position_smoothed_tv)//2:sampling_interval].reset_index(drop=True)
+            torque_sampled = torque_smoothed_tv.iloc[:len(torque_smoothed_tv)//2:sampling_interval].reset_index(drop=True)
+            
+            # position_sampleds = np.array(position_smoothed_tv.iloc[:len(position_smoothed_tv)//2:sampling_interval])
+            # torque_sampleds = np.array(torque_smoothed_tv.iloc[:len(torque_smoothed_tv)//2:sampling_interval])
+
+            
+            dy1 = [0] * (min(len(position_sampled) , len(torque_sampled)));
+            for i in range(len(dy1)-6):
+               # print(f"i: {i}, i+1: {i+1}, len(position_sampleds): {len(position_sampleds)}")
+                delta_position = position_sampled[i + 5] - position_sampled[i+4]
+                dy1[i] = (torque_sampled[i + 5] - torque_sampled[i+4]) / delta_position
+                
+                
+            #dy_torque_sampled = torque_sampled.diff().iloc[:].values
             
             data2 = pd.read_csv(self.data2_tv_directory[0])
             data3 = pd.read_csv(self.data3_tv_directory[0])
@@ -796,13 +1078,29 @@ class MainWindow(QMainWindow):
             position_smoothed_tv_3 = position_smoothed_tv_3 + self.x_offset3
             torque_smoothed_tv_3 = torque_smoothed_tv_3 + self.y_offset3
             
-            position_sampled2 = position_smoothed_tv_2.iloc[:len(position_smoothed_tv_2)//2:sampling_interval]
-            torque_sampled2 = torque_smoothed_tv_2.iloc[:len(torque_smoothed_tv_2)//2:sampling_interval]
-            dy_torque_sampled2 = torque_sampled2.diff().iloc[:].values 
+            position_sampled2 = position_smoothed_tv_2.iloc[:len(position_smoothed_tv_2)//2:sampling_interval].reset_index(drop=True)
+            torque_sampled2 = torque_smoothed_tv_2.iloc[:len(torque_smoothed_tv_2)//2:sampling_interval].reset_index(drop=True)
+            #dy_torque_sampled2 = torque_sampled2.diff().iloc[:].values 
+            position_sampled3 = position_smoothed_tv_3.iloc[:len(position_smoothed_tv_3)//2:sampling_interval].reset_index(drop=True)
+            torque_sampled3 = torque_smoothed_tv_3.iloc[:len(torque_smoothed_tv_3)//2:sampling_interval].reset_index(drop=True)
+            #dy_torque_sampled3 = torque_sampled3.diff().iloc[:].values 
             
-            position_sampled3 = position_smoothed_tv_3.iloc[:len(position_smoothed_tv_3)//2:sampling_interval]
-            torque_sampled3 = torque_smoothed_tv_3.iloc[:len(torque_smoothed_tv_3)//2:sampling_interval]
-            dy_torque_sampled3 = torque_sampled3.diff().iloc[:].values 
+            dy3 = [0] * (min(len(position_sampled2) , len(torque_sampled2)));
+            for i in range(len(dy3)-6):
+               # print(f"i: {i}, i+1: {i+1}, len(position_sampleds): {len(position_sampleds)}")
+                delta_position2 = position_sampled2[i + 5] - position_sampled2[i+4]
+                dy3[i] = (torque_sampled2[i + 5] - torque_sampled2[i+4]) / delta_position2
+                
+                
+            dy2 = [0] * (min(len(position_sampled3) , len(torque_sampled3)));
+            for i in range(len(dy2)-6):
+                # print(f"i: {i}, i+1: {i+1}, len(position_sampleds): {len(position_sampleds)}")
+                 delta_position3 = position_sampled3[i + 5] - position_sampled3[i+4]
+                 dy2[i] = (torque_sampled3[i + 5] - torque_sampled3[i+4]) / delta_position3
+                 
+                 
+                 
+            
             
             # Patient report
             dorsi1 = abs(position_smoothed_tv.max())
@@ -849,19 +1147,22 @@ class MainWindow(QMainWindow):
             with open(file_path_neutral_position_tv_3, 'r') as file3:
                 Neutralposition_tv_after = file3.read()
         
-            min_stiffness_rom_post = min(len(torque_sampled.diff()) , len(torque_sampled3.diff()) )
-            min_stiffness_rom_after = min(len(torque_sampled.diff()) , len(torque_sampled2.diff()))
-            self.stiffness_improvement = [(((torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):min_stiffness_rom_post].mean()) - (torque_sampled3.diff().iloc[round(len(torque_sampled3.diff())/2):min_stiffness_rom_post].mean()))/(torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):min_stiffness_rom_post].mean()))*100 , (((torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):min_stiffness_rom_after].mean()) - (torque_sampled2.diff().iloc[round(len(torque_sampled2.diff())/2):min_stiffness_rom_after].mean()))/(torque_sampled.diff().iloc[round(len(torque_sampled.diff())/2):min_stiffness_rom_after].mean()))*100]
-            self.description_input.append(f'Stiffness Improvement pre/post: {round(self.stiffness_improvement[0],2)}%')
-            self.description_input.append(f'Stiffness Improvement pre/after: {round(self.stiffness_improvement[1],2)}%')
-            #self.stiffness_improvement = [1,2]
+            
+            self.stfnss = [ sum(dy1) / len(dy1) , sum(dy2) / len(dy2) , sum(dy3) / len(dy3)]
+            self.stiffness_improvement = [((self.stfnss[1]-self.stfnss[0])/self.stfnss[0])*100 , ((self.stfnss[2]-self.stfnss[0])/self.stfnss[0])*100]
+            self.description_input.append(f'Stiffness Improvement pre/{self.lbl2}: {round(self.stiffness_improvement[0],2)}%')
+            self.description_input.append(f'Stiffness Improvement pre/{self.lbl3}: {round(self.stiffness_improvement[1],2)}%')
+            self.description_input.append(f'Stiffness {self.lbl1}: {round(self.stfnss[0],2)}')
+            self.description_input.append(f'Stiffness {self.lbl2}: {round(self.stfnss[1],2)}')
+            self.description_input.append(f'Stiffness {self.lbl3}: {round(self.stfnss[2],2)}')
+            
             
             # Plot the Spasticity
             self.fig.clear()
             ax = self.fig.add_subplot(121)
-            ax.bar(position_sampled, dy_torque_sampled, alpha=0.3, label='Before')
-            ax.bar(position_sampled3, dy_torque_sampled3,alpha=0.3, label='Post')
-            ax.bar(position_sampled2, dy_torque_sampled2,alpha=0.3, label='After')
+            ax.bar(position_sampled.iloc[4:], dy1[:-4], alpha=0.3, label= self.lbl1)
+            ax.bar(position_sampled3.iloc[4:], dy2[:-4] ,alpha=0.3, label= self.lbl2)
+            ax.bar(position_sampled2.iloc[4:], dy3[:-4] ,alpha=0.3, label= self.lbl3)
             ax.set_xlabel('Position')
             ax.set_ylabel('Stiffness')
             ax.set_title('Stiffness at '+ self.figure_name[0])
@@ -871,9 +1172,9 @@ class MainWindow(QMainWindow):
             
             # Plot the position-torque
             ax1 = self.fig.add_subplot(122)
-            ax1.plot(position_smoothed_tv , torque_smoothed_tv , label = 'Before' )
-            ax1.plot(position_smoothed_tv_3 , torque_smoothed_tv_3 , label = 'Post')
-            ax1.plot(position_smoothed_tv_2 , torque_smoothed_tv_2 , label = 'After')
+            ax1.plot(position_smoothed_tv , torque_smoothed_tv , label = self.lbl1 )
+            ax1.plot(position_smoothed_tv_3 , torque_smoothed_tv_3 , label = self.lbl2)
+            ax1.plot(position_smoothed_tv_2 , torque_smoothed_tv_2 , label = self.lbl3)
             
             ax1.legend() # Show legend with data set names
             ax1.set_xlabel('Position (deg)')
@@ -972,9 +1273,9 @@ class MainWindow(QMainWindow):
             # Plot the Spasticity
             self.fig.clear()
             ax = self.fig.add_subplot(121)
-            ax.bar(position_sampled, dy_torque_sampled, alpha=0.3, label='Before')
-            ax.bar(position_sampled3, dy_torque_sampled3,alpha=0.3, label='Post')
-            ax.bar(position_sampled2, dy_torque_sampled2,alpha=0.3, label='After')
+            ax.bar(position_sampled, dy_torque_sampled, alpha=0.3, label= self.lbl1)
+            ax.bar(position_sampled3, dy_torque_sampled3,alpha=0.3, label= self.lbl2)
+            ax.bar(position_sampled2, dy_torque_sampled2,alpha=0.3, label= self.lbl3)
             
             ax.set_xlabel('Position')
             ax.set_ylabel('Stiffness')
@@ -985,9 +1286,9 @@ class MainWindow(QMainWindow):
             
             # Plot the position-torque
             ax1 = self.fig.add_subplot(122)
-            ax1.plot(position_smoothed_tv  , torque_smoothed_tv  , label = 'Before' )
-            ax1.plot(position_smoothed_tv_3  , torque_smoothed_tv_3  , label = 'Post')
-            ax1.plot(position_smoothed_tv_2  , torque_smoothed_tv_2  , label = 'After')
+            ax1.plot(position_smoothed_tv  , torque_smoothed_tv  , label = self.lbl1 )
+            ax1.plot(position_smoothed_tv_3  , torque_smoothed_tv_3  , label = self.lbl2)
+            ax1.plot(position_smoothed_tv_2  , torque_smoothed_tv_2  , label = self.lbl3)
             
             ax1.legend() # Show legend with data set names
             ax1.set_xlabel('Position (deg)')
@@ -1079,9 +1380,9 @@ class MainWindow(QMainWindow):
             # Plot the Spasticity
             self.fig.clear()
             ax = self.fig.add_subplot(121)
-            ax.bar(position_sampled, dy_torque_sampled, alpha=0.3, label='Before')
-            ax.bar(position_sampled3, dy_torque_sampled3,alpha=0.3, label='Post')
-            ax.bar(position_sampled2, dy_torque_sampled2,alpha=0.3, label='After')
+            ax.bar(position_sampled, dy_torque_sampled, alpha=0.3, label= self.lbl1)
+            ax.bar(position_sampled3, dy_torque_sampled3,alpha=0.3, label= self.lbl2)
+            ax.bar(position_sampled2, dy_torque_sampled2,alpha=0.3, label= self.lbl3)
             
             ax.set_xlabel('Position')
             ax.set_ylabel('Stiffness')
@@ -1092,9 +1393,9 @@ class MainWindow(QMainWindow):
             
             # Plot the position-torque
             ax1 = self.fig.add_subplot(122)
-            ax1.plot(position_smoothed_tv , torque_smoothed_tv , label = 'Before' )
-            ax1.plot(position_smoothed_tv_3 , torque_smoothed_tv_3 , label = 'Post')
-            ax1.plot(position_smoothed_tv_2 , torque_smoothed_tv_2 , label = 'After')
+            ax1.plot(position_smoothed_tv , torque_smoothed_tv , label = self.lbl1 )
+            ax1.plot(position_smoothed_tv_3 , torque_smoothed_tv_3 , label = self.lbl2)
+            ax1.plot(position_smoothed_tv_2 , torque_smoothed_tv_2 , label = self.lbl3)
             
             
             ax1.legend() # Show legend with data set names
@@ -1188,9 +1489,9 @@ class MainWindow(QMainWindow):
             # Plot the Spasticity
             self.fig.clear()
             ax = self.fig.add_subplot(121)
-            ax.bar(position_sampled, dy_torque_sampled, alpha=0.3, label='Before')
-            ax.bar(position_sampled3, dy_torque_sampled3,alpha=0.3, label='Post')
-            ax.bar(position_sampled2, dy_torque_sampled2,alpha=0.3, label='After')
+            ax.bar(position_sampled, dy_torque_sampled, alpha=0.3, label= self.lbl1)
+            ax.bar(position_sampled3, dy_torque_sampled3,alpha=0.3, label= self.lbl2)
+            ax.bar(position_sampled2, dy_torque_sampled2,alpha=0.3, label= self.lbl3)
             
             ax.set_xlabel('Position')
             ax.set_ylabel('Stiffness')
@@ -1201,9 +1502,9 @@ class MainWindow(QMainWindow):
             
             # Plot the position-torque
             ax1 = self.fig.add_subplot(122)
-            ax1.plot(position_smoothed_tv , torque_smoothed_tv , label = 'Before' )
-            ax1.plot(position_smoothed_tv_3 , torque_smoothed_tv_3 , label = 'Post')
-            ax1.plot(position_smoothed_tv_2 , torque_smoothed_tv_2 , label = 'After')
+            ax1.plot(position_smoothed_tv , torque_smoothed_tv , label = self.lbl1 )
+            ax1.plot(position_smoothed_tv_3 , torque_smoothed_tv_3 , label = self.lbl2)
+            ax1.plot(position_smoothed_tv_2 , torque_smoothed_tv_2 , label = self.lbl3)
             
             ax1.legend() # Show legend with data set names
             ax1.set_xlabel('Position (deg)')
@@ -1325,16 +1626,16 @@ class MainWindow(QMainWindow):
             #self.mvcp = [1 , 2, 3]
             
             #self.mvcimprovement = [((mean_of_min_std_window_f2 - mean_of_min_std_window_f)/mean_of_min_std_window_f)*100 , ((abs(mean_of_min_std_window_l2) - abs(mean_of_min_std_window_l))/abs(mean_of_min_std_window_l))*100]
-            line1 = f'Dorsi Before: {round(mean_of_min_std_window_f+self.mvc_offset,2)}'
-            line2 = f'Plantar Before: {round(mean_of_min_std_window_l+self.mvc_offset,2)}'
-            line3 = f'Dorsi Post: {round(mean_of_min_std_window_f3+self.mvc_offset2,2)}'
-            line4 = f'Plantar Post: {round(mean_of_min_std_window_l3+self.mvc_offset2,2)}'
-            line5 = f'Dorsi After: {round(mean_of_min_std_window_f2+self.mvc_offset3,2)}'
-            line6 = f'Plantar After: {round(mean_of_min_std_window_l2+self.mvc_offset3,2)}'
-            line7 = f'Dorsi improvement Pre/Post: {(round(mean_of_min_std_window_f3+self.mvc_offset2,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100}'
-            line8 = f'Plantar improvement Pre/Post: {(round(mean_of_min_std_window_l3+self.mvc_offset2,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100}'
-            line9 = f'Dorsi improvement Pre/After: {(round(mean_of_min_std_window_f2+self.mvc_offset3,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100}'
-            line10 = f'Plantar improvement Pre/After: {(round(mean_of_min_std_window_l2+self.mvc_offset3,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100}'
+            line1 = f'Dorsi {self.lbl1}: {round(mean_of_min_std_window_f+self.mvc_offset,2)}'
+            line2 = f'Plantar {self.lbl1}: {round(mean_of_min_std_window_l+self.mvc_offset,2)}'
+            line3 = f'Dorsi {self.lbl2}: {round(mean_of_min_std_window_f3+self.mvc_offset2,2)}'
+            line4 = f'Plantar {self.lbl2}: {round(mean_of_min_std_window_l3+self.mvc_offset2,2)}'
+            line5 = f'Dorsi {self.lbl3}: {round(mean_of_min_std_window_f2+self.mvc_offset3,2)}'
+            line6 = f'Plantar {self.lbl3}: {round(mean_of_min_std_window_l2+self.mvc_offset3,2)}'
+            line7 = f'Dorsi improvement Pre/{self.lbl2}: {(round(mean_of_min_std_window_f3+self.mvc_offset2,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100}'
+            line8 = f'Plantar improvement Pre/{self.lbl2}: {(round(mean_of_min_std_window_l3+self.mvc_offset2,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100}'
+            line9 = f'Dorsi improvement Pre/{self.lbl3}: {(round(mean_of_min_std_window_f2+self.mvc_offset3,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100}'
+            line10 = f'Plantar improvement Pre/{self.lbl3}: {(round(mean_of_min_std_window_l2+self.mvc_offset3,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100}'
             
             mvc_content = [line1,line3,line5,line2,line4,line6,line7,line8,line9,line10]
             # Convert the list to a string
@@ -1343,9 +1644,9 @@ class MainWindow(QMainWindow):
             self.description_input.setPlainText(mvc_content_str)
             
             ax3 = self.fig.add_subplot(111)
-            ax3.plot(time,torque + self.mvc_offset  , label = 'Before')
-            ax3.plot(time3,torque3 + self.mvc_offset2 , label = 'Post')
-            ax3.plot(time2,torque2 + self.mvc_offset3 , label = 'After')
+            ax3.plot(time,torque + self.mvc_offset  , label = self.lbl1)
+            ax3.plot(time3,torque3 + self.mvc_offset2 , label = self.lbl2)
+            ax3.plot(time2,torque2 + self.mvc_offset3 , label = self.lbl3)
             
             ax3.set_xlabel('Time')
             ax3.set_ylabel('Torque (Nm)')
@@ -1527,12 +1828,12 @@ class MainWindow(QMainWindow):
             self.speedimprovement = [ ((self.speed[1]-self.speed[0])/self.speed[0])*100 , ((self.speed[2]-self.speed[0])/self.speed[0])*100 ]
             self.AROMimprovement = [ ((self.AROM[1]-self.AROM[0])/self.AROM[0])*100 , ((self.AROM[2]-self.AROM[0])/self.AROM[0])*100 ]
             
-            line00 = f"Max Speeds: Pre:{maxspeed:.2f} , Post:{maxspeed3:.2f} , After:{maxspeed2:.2f} "
-            line01 = f"Max AROMs: Pre:{self.AROM[0]:.2f} , Post:{self.AROM[1]:.2f} , After:{self.AROM[2]:.2f} "
-            line1 = f"Speed improvement pre/post: {self.speedimprovement[0]:.2f} %"
-            line2 = f"Speed improvement long-term: {self.speedimprovement[1]:.2f} %"
-            line3 = f"AROM improvement pre/post: {self.AROMimprovement[0]:.2f} %"
-            line4 = f"AROM improvement long-term: {self.AROMimprovement[1]:.2f} %"
+            line00 = f"Max Speeds: Pre:{maxspeed:.2f} , {self.lbl2}:{maxspeed3:.2f} , {self.lbl3}:{maxspeed2:.2f} "
+            line01 = f"Max AROMs: Pre:{self.AROM[0]:.2f} , {self.lbl2}:{self.AROM[1]:.2f} , {self.lbl3}:{self.AROM[2]:.2f} "
+            line1 = f"Speed improvement pre/{self.lbl2}: {self.speedimprovement[0]:.2f} %"
+            line2 = f"Speed improvement pre/{self.lbl3}: {self.speedimprovement[1]:.2f} %"
+            line3 = f"AROM improvement pre/{self.lbl2}: {self.AROMimprovement[0]:.2f} %"
+            line4 = f"AROM improvement pre/{self.lbl3}: {self.AROMimprovement[1]:.2f} %"
             voluntary_content = [line00,line01,line1,line2,line3,line4]
             # Convert the list to a string
             voluntary_content_str = '\n'.join(voluntary_content)
@@ -1541,7 +1842,7 @@ class MainWindow(QMainWindow):
 
             self.fig.clear()
             ax4 = self.fig.add_subplot(311)
-            ax4.plot(t , data_voluntary_smoothed,label='Before')
+            ax4.plot(t , data_voluntary_smoothed,label= self.lbl1)
             ax4.set_ylabel('Position (deg)')
             # ax4.scatter(Tmaximas, maximas , c='g')
             # ax4.scatter(Tminimas, minimas , c='g')
@@ -1560,7 +1861,7 @@ class MainWindow(QMainWindow):
             ax4.text(t[extrema_with_max_diff[0]], data_voluntary_smoothed[extrema_with_max_diff[0]] , f'Min : {min_value_str}', ha='right', va='top', color='red')
             
             ax5 = self.fig.add_subplot(313)
-            ax5.plot(t2 ,data_voluntary_smoothed2, label='After')
+            ax5.plot(t2 ,data_voluntary_smoothed2, label= self.lbl3)
             ax5.set_ylabel('Position (deg)')
             # ax5.scatter(Tmaximas2, maximas2 , c='g')
             # ax5.scatter(Tminimas2, minimas2 , c='g')
@@ -1577,7 +1878,7 @@ class MainWindow(QMainWindow):
             ax5.grid(True)
             
             ax5 = self.fig.add_subplot(312)
-            ax5.plot(t3,data_voluntary_smoothed3, label='Post')
+            ax5.plot(t3,data_voluntary_smoothed3, label= self.lbl2)
             ax5.set_ylabel('Position (deg)')
             # ax5.scatter(Tmaximas3, maximas3 , c='g')
             # ax5.scatter(Tminimas3, minimas3 , c='g')
@@ -1630,23 +1931,26 @@ class MainWindow(QMainWindow):
             plantar2 = abs(data2.min())
             dorsi3 = abs(data3.max())
             plantar3 = abs(data3.min())
+            self.rom1 = dorsi1 + plantar1
+            self.rom2 = dorsi3 + plantar3
+            self.rom3 = dorsi2 + plantar2
             dorsiImprovement = ((dorsi2 - dorsi1)/dorsi1)*100
             plantarImprovement = ((plantar2 - plantar1)/plantar1)*100
             dorsiImprovementpost = ((dorsi3 - dorsi1)/dorsi1)*100
             plantarImprovementpost = ((plantar3 - plantar1)/plantar1)*100
-            x = ['DF Before','DF Post', 'DF After' ]
+            x = ['DF {self.lbl1}','DF {self.lbl2}', 'DF {self.lbl3}' ]
             #y = [dorsi1, dorsi3, dorsi2]
             #x2 = ['PF Before','PF Post', 'PF After']
             #y2 = [plantar1 , plantar3, plantar2]
             
-            line1 = f"NP before: {abs(round(float(Neutralposition_tv_before),0))}"
-            line2 = f"NP post: {abs(round(float(Neutralposition_tv_post),0))}"
-            line3 = f"NP after: {abs(round(float(Neutralposition_tv_after),0))}"
-            line4 = f"DI after: {round(float(dorsiImprovement),0)} %"
-            line5 = f"PI after: {round(float(plantarImprovement),0)} %"
-            line6 = f"DI before/post: {round(float(dorsiImprovementpost),0)} %"
-            line7 = f"PI before/post: {round(float(plantarImprovementpost),0)} %"
-            ROM_content = [line1,line2,line3,line4,line5,line6,line7]
+            line1 = f"NP {self.lbl1}: {abs(round(float(Neutralposition_tv_before),0))}"
+            line2 = f"NP {self.lbl2}: {abs(round(float(Neutralposition_tv_post),0))}"
+            line3 = f"NP {self.lbl3}: {abs(round(float(Neutralposition_tv_after),0))}"
+            line4 = f"ROM {self.lbl1}: {round(float(dorsi1 + plantar1),0)} %"
+            line5 = f"ROM {self.lbl2}: {round(float(dorsi3 + plantar3),0)} %"
+            line6 = f"ROM {self.lbl3}: {round(float(dorsi2 + plantar2),0)} %"
+            #line7 = f"PI before/post: {round(float(plantarImprovementpost),0)} %"
+            ROM_content = [line1,line2,line3,line4,line5,line6]
             # Convert the list to a string
             ROM_content_str = '\n'.join(ROM_content)
             # Set the text
@@ -1656,9 +1960,9 @@ class MainWindow(QMainWindow):
             self.fig.clear()
             rom_parameters = ("Dorsiflextion ROM (Deg)","Plantarflexion ROM (Deg)")
             passive_values = {
-                 'Before': (round(dorsi1 ,2), round(plantar1 ,2)),
-                 'After 1 session': (round(dorsi3 ,2), round(plantar3 ,2)),
-                 'After 10 sessions': (round(dorsi2 ,2), round(plantar2 ,2)),
+                 self.chrtlbl1: (round(dorsi1 ,2), round(plantar1 ,2)),
+                 self.chrtlbl2: (round(dorsi3 ,2), round(plantar3 ,2)),
+                 self.chrtlbl3: (round(dorsi2 ,2), round(plantar2 ,2)),
             }
 
             x = np.arange(len(rom_parameters))  # the label locations
