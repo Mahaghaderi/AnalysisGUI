@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import pandas as pd
+import os
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QTextEdit,QSizePolicy
 from PyQt5.QtCore import Qt
@@ -15,6 +16,7 @@ from PyQt5.QtWidgets import QSlider
 #import scipy.signal as signal
 from scipy.signal import find_peaks
 from matplotlib.figure import Figure
+from PyQt5.QtGui import QFont
 #from docx import Document
 #from docx.shared import Inches
 
@@ -38,7 +40,12 @@ class MainWindow(QMainWindow):
     rom1 = 0
     rom2 = 0
     rom3 = 0
-    
+    mvctrialscounter = 0
+    mvctrialscounter2=0
+    mvctrialscounter3 =0
+    voltrialscounter=0
+    voltrialscounter2=0
+    voltrialscounter3=0
     def __init__(self):
         super().__init__()
         self.i=0
@@ -130,23 +137,71 @@ class MainWindow(QMainWindow):
 
         # Create the second column (right column) with a QVBoxLayout
         right_column_layout = QVBoxLayout()
-        button_names = ["TV 5", "TV 50", "TV 100", "TV 120", "MVC", "Voluntary", "ROM", "RMVC3", "RMVC1", "RMVC2","ChangeCycle"]
+        button_names = ["TV 5", "TV 50", "TV 100", "TV 120", "MVC", "Voluntary", "ROM" ,"ChangeCycle"]
         self.buttons = []
         
         for name in button_names:
-            button = QPushButton(name)
-            button.clicked.connect(self.plot_chart)
-            right_column_layout.addWidget(button)
-            self.buttons.append(button)
+            if name == "MVC" :
+                font = QFont()
+                font.setFamily('Calibri Light')
+                font.setPointSize(9)
+                button = QPushButton(name)
+                button.clicked.connect(self.plot_chart)
+                right_column_layout.addWidget(button)
+                self.buttons.append(button)
+                mvc_trials_changing_layout = QHBoxLayout()
+                mvc_trials_changing_button_names = ['1▶️' , '2▶️' , '3▶️']
+                for i in mvc_trials_changing_button_names:
+                    bttn = QPushButton(i)
+                    bttn.setFixedSize(30, 25)
+                    bttn.setFont(font)
+                    bttn.clicked.connect(self.plot_chart)
+                    mvc_trials_changing_layout.addWidget(bttn)
+                    self.buttons.append(bttn)
+                right_column_layout.addLayout(mvc_trials_changing_layout)
+                
+                mvc_reversing_layout = QHBoxLayout()
+                mvc_reversing_names = ['R1' , 'R2' , 'R3']
+                for i in mvc_reversing_names:
+                    bttn = QPushButton(i)
+                    bttn.clicked.connect(self.plot_chart)
+                    bttn.setCheckable(True)
+                    #bttn.toggle()
+                    bttn.setFixedSize(30, 25)
+                    bttn.setFont(font)
+                    mvc_reversing_layout.addWidget(bttn)
+                    self.buttons.append(bttn)
+                right_column_layout.addLayout(mvc_reversing_layout)
+                
+            elif name == "Voluntary" :
+                button = QPushButton(name)
+                button.clicked.connect(self.plot_chart)
+                right_column_layout.addWidget(button)
+                self.buttons.append(button)
+                vol_trials_changing_layout = QHBoxLayout()
+                vol_trials_changing_button_names = ['V1▶️' , 'V2▶️' , 'V3▶️']
+                for i in vol_trials_changing_button_names:
+                    bttnvl = QPushButton(i)
+                    bttnvl.clicked.connect(self.plot_chart)
+                    bttnvl.setFixedSize(30, 25)
+                    bttnvl.setFont(font)
+                    vol_trials_changing_layout.addWidget(bttnvl)
+                    self.buttons.append(bttnvl)
+                right_column_layout.addLayout(vol_trials_changing_layout) 
+            else:
+                button = QPushButton(name)
+                button.clicked.connect(self.plot_chart)
+                right_column_layout.addWidget(button)
+                self.buttons.append(button)
             
-        self.buttons[7].setCheckable(True)
-        self.buttons[7].toggle()
+        # self.buttons[7].setCheckable(True)
+        # self.buttons[7].toggle()
         
-        self.buttons[8].setCheckable(True)
-        self.buttons[8].toggle()
+        # self.buttons[8].setCheckable(True)
+        # self.buttons[8].toggle()
         
-        self.buttons[9].setCheckable(True)
-        self.buttons[9].toggle()
+        # self.buttons[9].setCheckable(True)
+        # self.buttons[9].toggle()
 
           # Add the left and right columns to the main horizontal layout    
         main_layout2.addLayout(left_column_layout, 4)  # Set the left layout's stretch factor to 4
@@ -322,6 +377,7 @@ class MainWindow(QMainWindow):
     
     def open_patient_report_window(self):
         self.main_widget = QWidget()
+        self.main_widget.setWindowTitle("Manual Report")
         pmain_layout = QVBoxLayout(self.main_widget)
         #self.setWindowTitle("Manual Patient Report")
         pmain_layout.setContentsMargins(15, 15, 15, 15)  
@@ -330,6 +386,8 @@ class MainWindow(QMainWindow):
         main_patient_report_layout = QVBoxLayout(patient_report_container)
         
         format_label =  QLabel("Please enter your data in the format: [pre , post/long1 , After/long2]")
+        format_label_piechart =  QLabel("Please enter your references in the format: [DF ROM , PF ROM , PROM , Stiffness, DF MVC ,PF MVC,  AROM , Speed ]")
+        
         main_patient_report_layout.addWidget(format_label)
         
         dfrom_label = QLabel("Dorsiflexion:")
@@ -379,6 +437,13 @@ class MainWindow(QMainWindow):
         main_patient_report_layout.addWidget(speed_label)
         main_patient_report_layout.addWidget(self.speed_box)
         
+        main_patient_report_layout.addWidget(format_label_piechart)
+        
+        references_label = QLabel("References:")
+        self.references_box = QLineEdit()
+        main_patient_report_layout.addWidget(references_label)
+        main_patient_report_layout.addWidget(self.references_box)
+        self.references_box.setText("[24.8,62.1,86.9,100,20,50,70.5,300]")
     
         gnrte_patient_report_button = QPushButton("Generate PDF")
         gnrte_patient_report_button.clicked.connect(self.plot_chart_patient_report_manual)
@@ -412,13 +477,15 @@ class MainWindow(QMainWindow):
         self.pPR_plantar = [float(x) for x in pPR_plantar_str.strip('[]').split(',')]
         pPR_dorsi_str = self.dfrom_box.text()
         self.pPR_dorsi = [float(x) for x in pPR_dorsi_str.strip('[]').split(',')]
+        references_str = self.references_box.text()
+        self.references = [float(x) for x in references_str.strip('[]').split(',')]
         
         self.fig.clear()
         passive_parameters = ("DF (Deg)","PF (Deg)", "ROM" ,"Stiffness")
         passive_values = {
-             self.chrtlbl1: (round(self.pPR_dorsi[0],1), round(self.pPR_plantar[0],1) , round(self.rom[0],1) , round(self.pstiffness[0],1)),
-             self.chrtlbl2: (round(self.pPR_dorsi[1],1), round(self.pPR_plantar[1],1), round(self.rom[1],1), round(self.pstiffness[1],1)),
-             self.chrtlbl3: (round(self.pPR_dorsi[2],1), round(self.pPR_plantar[2],1), round(self.rom[2],1) ,round(self.pstiffness[2],1)),
+             self.chrtlbl1: (round(self.pPR_dorsi[0],1), round(self.pPR_plantar[0],1) , round(self.rom[0],1) , 50*round(self.pstiffness[0],1)),
+             self.chrtlbl2: (round(self.pPR_dorsi[1],1), round(self.pPR_plantar[1],1), round(self.rom[1],1), 50*round(self.pstiffness[1],1)),
+             self.chrtlbl3: (round(self.pPR_dorsi[2],1), round(self.pPR_plantar[2],1), round(self.rom[2],1) , 50*round(self.pstiffness[2],1)),
         }
 
         x = np.arange(len(passive_parameters))  # the label locations
@@ -502,6 +569,172 @@ class MainWindow(QMainWindow):
         #self.patient_story.append(Spacer(1, 12))
         self.patient_story.append(Spacer(1, 12))
         self.count1 = self.count1+1
+        
+        
+        self.fig.clf()
+        # data_pie for four pie charts
+        DF_values_piechart = np.array([round((self.pPR_dorsi[0]/self.references[0])*100 ,2),
+              round(((abs(self.pPR_dorsi[1]-self.pPR_dorsi[0]))/self.references[0])*100 ,2),
+              round(((abs(self.pPR_dorsi[2]-self.pPR_dorsi[1]))/self.references[0])*100 ,2),
+              round(((abs(self.references[0]-self.pPR_dorsi[2]))/self.references[0])*100 ,2)])
+
+        PF_values_piechart = np.array([round((self.pPR_plantar[0]/self.references[1])*100 ,2),
+              round(((abs(self.pPR_plantar[1]-self.pPR_plantar[0]))/self.references[1])*100 ,2),
+              round(((abs(self.pPR_plantar[2]-self.pPR_plantar[1]))/self.references[1])*100 ,2),
+              round(((abs(self.references[1]-self.pPR_plantar[2]))/self.references[1])*100 ,2)])
+
+        ROM_values_piechart = np.array([round((self.rom[0]/self.references[2])*100 ,2),
+              round(((abs(self.rom[1]-self.rom[0]))/self.references[2])*100 ,2),
+              round(((abs(self.rom[2]-self.rom[1]))/self.references[2])*100 ,2),
+              round(((abs(self.references[2]-self.rom[2]))/self.references[2])*100 ,2)])
+
+        stiff_values_piechart = np.array([0,
+              round(((abs(self.pstiffness[1]-self.pstiffness[0]))/self.pstiffness[0])*100,2),
+              round(((abs(self.pstiffness[2]-self.pstiffness[0]))/self.pstiffness[0])*100,2),
+              round(100-((abs(self.pstiffness[2]-self.pstiffness[0]))/self.pstiffness[0])*100 -((abs(self.pstiffness[1]-self.pstiffness[0])/self.pstiffness[0])*100),2)])
+
+        data_pie_passive = [
+            DF_values_piechart,
+            PF_values_piechart,
+            ROM_values_piechart,
+            stiff_values_piechart
+        ]
+        
+        print(data_pie_passive)
+
+        #fig, ax = plt.subplots(subplot_kw={'constraint': 'tight'})
+        #ax = self.fig.add_subplot(1, 4, figsize=(12, 3), subplot_kw=dict(projection="polar"))
+        figpie = self.fig
+        #figpie.set_size_inches(12, 3)
+        axspie = figpie.subplots(1, 4, subplot_kw=dict(projection="polar"))
+
+        pie_chart_titles_passive = ['DF Improvement' , 'PF Improvement' , 'ROM Improvement' , 'Stiffness Improvement']
+        pie_labels = ['Pre' , 'Long1' , 'Long2' , 'Remained']
+        size = 0.1  # Width of the pie pieces
+        
+        for i, ax in enumerate(axspie):
+            vals = data_pie_passive[i]
+    
+            # Normalize vals to 2 pi
+            valsnorm = vals / np.sum(vals) * 2 * np.pi
+            # Obtain the ordinates of the bar edges
+            valsleft = np.cumsum(np.append(0, valsnorm.flatten()[:-1])).reshape(vals.shape)
+    
+            # Use the tab20c colormap for outer and inner colors
+            cmap = plt.colormaps["tab20c"]
+            inner_colors = [cmap(i) for i in [3, 1, 9, 20]]
+    
+            # Set starting angle
+            start_angle = 0  # Change this value to set the desired starting angle
+    
+            ax.bar(x=valsleft.flatten() + np.deg2rad(start_angle),
+                   width=valsnorm.flatten(), bottom=0, height=1 - size,
+                   color=inner_colors ,edgecolor='w', linewidth=1, align="edge")
+    
+            # Add labels
+            for j, val in enumerate(vals.flatten()):
+                print("Index j:", j)  # Add this line for debugging
+                print("Current pie_labels:", pie_labels)  # Add this line for debugging
+                print("Length of pie_labels:", len(pie_labels))  # Add this line for debugging
+                angle = np.deg2rad((valsleft.flatten()[j] + valsnorm.flatten()[j] / 2) * 180 / np.pi + start_angle)
+                ax.text(angle, 1.1, f'{pie_labels[j]}: {val}%', ha='center', va='center')
+    
+            # Set title and turn off axis
+            ax.set(title=f"{pie_chart_titles_passive[i]}")
+            ax.set_axis_off()
+
+        # Adjust layout for better spacing
+        self.fig.tight_layout()
+        self.canvas.draw()
+        image_filename = f"chart_image1_{self.count1}.png"
+        self.fig.savefig(image_filename)
+        # Add the image to the PDF
+        img = plt.imread(image_filename)
+        img_width = 520  # Adjust the image width as needed
+        img_height = img_width * img.shape[0] / img.shape[1]
+        img_flowable = Image(image_filename, width=img_width, height=img_height)
+        self.patient_story.append(img_flowable)
+        self.patient_story.append(Spacer(1, 12))
+        #self.patient_story.append(Spacer(1, 12))
+        self.count1 = self.count1+1
+        
+        
+        self.fig.clf()
+        # data_pie for four pie charts
+        DF_MVC_values_piechart = np.array([round((self.pmvcd[0]/self.references[4])*100 ,2),
+              round(((abs(self.pmvcd[1]-self.pmvcd[0]))/self.references[4])*100 ,2),
+              round(((abs(self.pmvcd[2]-self.pmvcd[1]))/self.references[4])*100 ,2),
+              round(((abs(self.references[4]-self.pmvcd[2]))/self.references[4])*100 ,2)])
+
+        PF_MVC_values_piechart = np.array([round((self.pmvcp[0]/self.references[5])*100 ,2),
+              round(((abs(self.pmvcp[1]-self.pmvcp[0]))/self.references[5])*100 ,2),
+              round(((abs(self.pmvcp[2]-self.pmvcp[1]))/self.references[5])*100 ,2),
+              round(((abs(self.references[5]-self.pmvcp[2]))/self.references[5])*100 ,2)])
+
+        AROM_values_piechart = np.array([round((self.pAROM[0]/self.references[6])*100 ,2),
+              round(((abs(self.pAROM[1]-self.pAROM[0]))/self.references[6])*100 ,2),
+              round(((abs(self.pAROM[2]-self.pAROM[1]))/self.references[6])*100 ,2),
+              round(((abs(self.references[6]-self.pAROM[2]))/self.references[6])*100 ,2)])
+
+        speed_values_piechart = np.array([round((self.pspeed[0]/self.references[7])*100 ,2),
+              round(((abs(self.pspeed[1]-self.pspeed[0]))/self.references[7])*100 ,2),
+              round(((abs(self.pspeed[2]-self.pspeed[1]))/self.references[7])*100 ,2),
+              round(((abs(self.references[7]-self.pspeed[2]))/self.references[7])*100 ,2)])
+        
+        data_pie_active = [
+            DF_MVC_values_piechart,
+            PF_MVC_values_piechart,
+            AROM_values_piechart,
+            speed_values_piechart
+        ]
+        
+        figpie = self.fig
+        #figpie.set_size_inches(12, 3)
+        axspie = figpie.subplots(1, 4, subplot_kw=dict(projection="polar"))
+
+        pie_chart_titles_active = ['DF MVC Improvement' , 'PF MVC Improvement' , 'AROM Improvement' , 'Speed Improvement']
+        pie_labels = ['Pre' , 'Long1' , 'Long2' , 'Remained']
+        size = 0.1  # Width of the pie pieces
+        
+        for i, ax in enumerate(axspie):
+            vals = data_pie_active[i]
+    
+            # Normalize vals to 2 pi
+            valsnorm = vals / np.sum(vals) * 2 * np.pi
+            # Obtain the ordinates of the bar edges
+            valsleft = np.cumsum(np.append(0, valsnorm.flatten()[:-1])).reshape(vals.shape)
+    
+            # Set starting angle
+            start_angle = 0  # Change this value to set the desired starting angle
+    
+            ax.bar(x=valsleft.flatten() + np.deg2rad(start_angle),
+                   width=valsnorm.flatten(), bottom=0, height=1 - size,
+                   color=inner_colors ,edgecolor='w', linewidth=1, align="edge")
+    
+            # Add labels
+            for j, val in enumerate(vals.flatten()):
+                angle = np.deg2rad((valsleft.flatten()[j] + valsnorm.flatten()[j] / 2) * 180 / np.pi + start_angle)
+                ax.text(angle, 1.1, f'{pie_labels[j]}: {val}%', ha='center', va='center')
+    
+            # Set title and turn off axis
+            ax.set(title=f"{pie_chart_titles_active[i]}")
+            ax.set_axis_off()
+
+        # Adjust layout for better spacing
+        self.fig.tight_layout()
+        self.canvas.draw()
+        image_filename = f"chart_image1_{self.count1}.png"
+        self.fig.savefig(image_filename)
+        # Add the image to the PDF
+        img = plt.imread(image_filename)
+        img_width = 520  # Adjust the image width as needed
+        img_height = img_width * img.shape[0] / img.shape[1]
+        img_flowable = Image(image_filename, width=img_width, height=img_height)
+        self.patient_story.append(img_flowable)
+        self.patient_story.append(Spacer(1, 12))
+        #self.patient_story.append(Spacer(1, 12))
+        self.count1 = self.count1+1
+        
         
         pdf_filename = self.patient_name + "_manualPatientReport.pdf"
         doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
@@ -791,9 +1024,9 @@ class MainWindow(QMainWindow):
         self.fig.clear()
         passive_parameters = ("DF (Deg)","PF (Deg)", "ROM (Deg)", "Stiffness")
         passive_values = {
-             self.chrtlbl1: (round(self.PR_dorsi[0],1), round(self.PR_plantar[0],1) , round(self.rom1,1) , round(self.stfnss[0],1) ),
-             self.chrtlbl2: (round(self.PR_dorsi[2],1), round(self.PR_plantar[2],1), round(self.rom2,1) ,round(self.stfnss[1],1)),
-             self.chrtlbl3: (round(self.PR_dorsi[1],1), round(self.PR_plantar[1],1), round(self.rom3,1) ,round(self.stfnss[2],1)),
+             self.chrtlbl1: (round(self.PR_dorsi[0],1), round(self.PR_plantar[0],1) , round(self.rom1,1) , 50*round(self.stfnss[0],1) ),
+             self.chrtlbl2: (round(self.PR_dorsi[2],1), round(self.PR_plantar[2],1), round(self.rom2,1) ,50*round(self.stfnss[1],1)),
+             self.chrtlbl3: (round(self.PR_dorsi[1],1), round(self.PR_plantar[1],1), round(self.rom3,1) ,50*round(self.stfnss[2],1)),
         }
 
         x = np.arange(len(passive_parameters))  # the label locations
@@ -931,8 +1164,8 @@ class MainWindow(QMainWindow):
         Data_tv_50 = directory_path_TV50 + '\data.csv'
         Data_tv_100 = directory_path_TV100 + '\data.csv'
         Data_tv_120 = directory_path_TV120 + '\data.csv'
-        Data_mvc = directory_path_mvc + '\data.csv'
-        Data_voluntary = directory_path_voluntary + '\data.csv'
+        Data_mvc = directory_path_mvc
+        Data_voluntary = directory_path_voluntary
 
         # DATA SET 2 CASE DIRECTORY
         directory_path2_TV5 = self.DirectoryOfDataSet2 + '\TV_5_3'
@@ -946,8 +1179,8 @@ class MainWindow(QMainWindow):
         Data2_tv_50 = directory_path2_TV50 + '\data.csv'
         Data2_tv_100 = directory_path2_TV100 + '\data.csv'
         Data2_tv_120 = directory_path2_TV120 + '\data.csv'
-        Data2_mvc = directory_path2_mvc + '\data.csv'
-        Data2_voluntary = directory_path2_voluntary + '\data.csv'
+        Data2_mvc = directory_path2_mvc
+        Data2_voluntary = directory_path2_voluntary
         
         # DATA SET 3 CASE DIRECTORY
         directory_path3_TV5 = self.DirectoryOfDataSet3 + '\TV_5_3'
@@ -961,8 +1194,8 @@ class MainWindow(QMainWindow):
         Data3_tv_50 = directory_path3_TV50 + '\data.csv'
         Data3_tv_100 = directory_path3_TV100 + '\data.csv'
         Data3_tv_120 = directory_path3_TV120 + '\data.csv'
-        Data3_mvc = directory_path3_mvc + '\data.csv'
-        Data3_voluntary = directory_path3_voluntary + '\data.csv'
+        Data3_mvc = directory_path3_mvc
+        Data3_voluntary = directory_path3_voluntary
       
         self.data1_tv_directory = [Data_tv_5, Data_tv_50, Data_tv_100, Data_tv_120, Data_mvc, Data_voluntary]
         self.data2_tv_directory = [Data2_tv_5, Data2_tv_50, Data2_tv_100, Data2_tv_120, Data2_mvc, Data2_voluntary]
@@ -997,7 +1230,7 @@ class MainWindow(QMainWindow):
             return
         
         button_index = self.buttons.index(self.sender())
-        if button_index == 10:
+        if button_index == 16:
             cyclenumber = ['Cycle 1' , 'Cycle 2' , 'Cycle 3']
             if self.tvc == 2: 
                 self.tvc=0 
@@ -1041,7 +1274,9 @@ class MainWindow(QMainWindow):
                 delta_position = position_sampled[i + 5] - position_sampled[i+4]
                 dy1[i] = (torque_sampled[i + 5] - torque_sampled[i+4]) / delta_position
                 
-                
+            dy1.remove(min(dy1))
+            dy1.remove(min(dy1))
+            dy1.remove(max(dy1))     
             #dy_torque_sampled = torque_sampled.diff().iloc[:].values
             
             data2 = pd.read_csv(self.data2_tv_directory[0])
@@ -1090,7 +1325,9 @@ class MainWindow(QMainWindow):
                # print(f"i: {i}, i+1: {i+1}, len(position_sampleds): {len(position_sampleds)}")
                 delta_position2 = position_sampled2[i + 5] - position_sampled2[i+4]
                 dy3[i] = (torque_sampled2[i + 5] - torque_sampled2[i+4]) / delta_position2
-                
+            dy3.remove(min(dy3))
+            dy3.remove(min(dy3))
+            dy3.remove(max(dy3))    
                 
             dy2 = [0] * (min(len(position_sampled3) , len(torque_sampled3)));
             for i in range(len(dy2)-6):
@@ -1098,7 +1335,9 @@ class MainWindow(QMainWindow):
                  delta_position3 = position_sampled3[i + 5] - position_sampled3[i+4]
                  dy2[i] = (torque_sampled3[i + 5] - torque_sampled3[i+4]) / delta_position3
                  
-                 
+            dy2.remove(min(dy2))
+            dy2.remove(min(dy2))
+            dy2.remove(max(dy2))     
                  
             
             
@@ -1147,9 +1386,9 @@ class MainWindow(QMainWindow):
             with open(file_path_neutral_position_tv_3, 'r') as file3:
                 Neutralposition_tv_after = file3.read()
         
-            
-            self.stfnss = [ sum(dy1) / len(dy1) , sum(dy2) / len(dy2) , sum(dy3) / len(dy3)]
-            self.stiffness_improvement = [((self.stfnss[1]-self.stfnss[0])/self.stfnss[0])*100 , ((self.stfnss[2]-self.stfnss[0])/self.stfnss[0])*100]
+            stffnss_length = round(min(len(dy1),len(dy2),len(dy3))/2)
+            self.stfnss = [sum(dy1[round(len(dy1)/2):stffnss_length+round(len(dy1)/2)]) / stffnss_length , sum(dy2[round(len(dy2)/2):stffnss_length+round(len(dy2)/2)]) / stffnss_length , sum(dy3[round(len(dy3)/2):stffnss_length+round(len(dy3)/2)]) / stffnss_length]
+            self.stiffness_improvement = [((self.stfnss[0]-self.stfnss[1])/self.stfnss[0])*100 , ((self.stfnss[0]-self.stfnss[2])/self.stfnss[0])*100]
             self.description_input.append(f'Stiffness Improvement pre/{self.lbl2}: {round(self.stiffness_improvement[0],2)}%')
             self.description_input.append(f'Stiffness Improvement pre/{self.lbl3}: {round(self.stiffness_improvement[1],2)}%')
             self.description_input.append(f'Stiffness {self.lbl1}: {round(self.stfnss[0],2)}')
@@ -1160,9 +1399,9 @@ class MainWindow(QMainWindow):
             # Plot the Spasticity
             self.fig.clear()
             ax = self.fig.add_subplot(121)
-            ax.bar(position_sampled.iloc[4:], dy1[:-4], alpha=0.3, label= self.lbl1)
-            ax.bar(position_sampled3.iloc[4:], dy2[:-4] ,alpha=0.3, label= self.lbl2)
-            ax.bar(position_sampled2.iloc[4:], dy3[:-4] ,alpha=0.3, label= self.lbl3)
+            ax.bar(position_sampled.iloc[4:len(dy1)+4], dy1[:-1], alpha=0.3, label= self.lbl1)
+            ax.bar(position_sampled3.iloc[4:len(dy2)+4], dy2[:-1] ,alpha=0.3, label= self.lbl2)
+            ax.bar(position_sampled2.iloc[4:len(dy3)+4], dy3[:-1] ,alpha=0.3, label= self.lbl3)
             ax.set_xlabel('Position')
             ax.set_ylabel('Stiffness')
             ax.set_title('Stiffness at '+ self.figure_name[0])
@@ -1516,7 +1755,7 @@ class MainWindow(QMainWindow):
             #ax1.text(0.98, 0.05, f'Energy Loss After: {format(round(area2,2))}', ha='right', va='top', transform=ax1.transAxes)
             self.canvas.draw()
             
-        elif button_index == 4:
+        elif button_index == 4 or button.text() == '3▶️' or button.text() == '2▶️' or button.text() == '1▶️' or button.text() == 'R3' or button.text() == 'R2' or button.text() == 'R1':
             file_path = self.folders1_tv_directory[4] + '\comment.txt'
             with open(file_path, 'r') as file:
                 self.chart_description = file.read()
@@ -1540,9 +1779,41 @@ class MainWindow(QMainWindow):
                 NeutralPosition_post = file4.read()
     
             # Set the path to the directory containing the CSV files
-            DataMvc = pd.read_csv(self.data1_tv_directory[4])
-            DataMvc2 = pd.read_csv(self.data2_tv_directory[4])
-            DataMvc3 = pd.read_csv(self.data3_tv_directory[4])
+            mvc_csv_files = [file for file in os.listdir(self.data1_tv_directory[4]) if file.endswith('.csv')]
+            mvc_csv_files2 = [file for file in os.listdir(self.data2_tv_directory[4]) if file.endswith('.csv')]
+            mvc_csv_files3 = [file for file in os.listdir(self.data3_tv_directory[4]) if file.endswith('.csv')]
+            
+            DataMvc = pd.read_csv(self.data1_tv_directory[4] + '\\'+ mvc_csv_files[self.mvctrialscounter])
+            if button.text() == '1▶️' and len(mvc_csv_files)>1:
+                if len(mvc_csv_files)-1 == self.mvctrialscounter:
+                    self.mvctrialscounter = 0
+                    DataMvc = pd.read_csv(self.data1_tv_directory[4] + '\\'+ mvc_csv_files[self.mvctrialscounter])
+                else:
+                    #print(self.mvctrialscounter)
+                    self.mvctrialscounter +=1
+                    DataMvc = pd.read_csv(self.data1_tv_directory[4] + '\\'+ mvc_csv_files[self.mvctrialscounter])
+                    
+            DataMvc3 = pd.read_csv(self.data3_tv_directory[4] + '\\'+ mvc_csv_files3[self.mvctrialscounter2])
+            if button.text() == '2▶️' and len(mvc_csv_files3)>1:
+                if len(mvc_csv_files3)-1 == self.mvctrialscounter2:
+                    self.mvctrialscounter2 = 0
+                    DataMvc3 = pd.read_csv(self.data3_tv_directory[4] + '\\'+ mvc_csv_files3[self.mvctrialscounter2])
+                else:
+                    self.mvctrialscounter2 +=1
+                    DataMvc3 = pd.read_csv(self.data3_tv_directory[4] + '\\'+ mvc_csv_files3[self.mvctrialscounter2])
+                    
+            DataMvc2 = pd.read_csv(self.data2_tv_directory[4] + '\\'+ mvc_csv_files2[self.mvctrialscounter3])
+            if button.text() == '3▶️' and len(mvc_csv_files2)>1:
+                if len(mvc_csv_files2)-1 == self.mvctrialscounter3:
+                    self.mvctrialscounter3 = 0
+                    DataMvc2 = pd.read_csv(self.data2_tv_directory[4] + '\\'+ mvc_csv_files2[self.mvctrialscounter3])
+                else:
+                    self.mvctrialscounter3 +=1
+                    DataMvc2 = pd.read_csv(self.data2_tv_directory[4] + '\\'+ mvc_csv_files2[self.mvctrialscounter3])
+                    
+            # DataMvc = pd.read_csv(self.data1_tv_directory[4])
+            # DataMvc2 = pd.read_csv(self.data2_tv_directory[4])
+            # DataMvc3 = pd.read_csv(self.data3_tv_directory[4])
 
             # Read the CSV file for Y-axis data (Torque)
             torque_mvc = DataMvc['Torque(Mz)']
@@ -1602,7 +1873,7 @@ class MainWindow(QMainWindow):
             # Plot the data
             self.fig.clear()
             
-            if self.buttons[7].isChecked() :
+            if self.buttons[10].isChecked() :
                 torque2 = np.flipud(torque2.values)
                 buffer2 = mean_of_min_std_window_f2
                 mean_of_min_std_window_f2 = mean_of_min_std_window_l2
@@ -1632,10 +1903,10 @@ class MainWindow(QMainWindow):
             line4 = f'Plantar {self.lbl2}: {round(mean_of_min_std_window_l3+self.mvc_offset2,2)}'
             line5 = f'Dorsi {self.lbl3}: {round(mean_of_min_std_window_f2+self.mvc_offset3,2)}'
             line6 = f'Plantar {self.lbl3}: {round(mean_of_min_std_window_l2+self.mvc_offset3,2)}'
-            line7 = f'Dorsi improvement Pre/{self.lbl2}: {(round(mean_of_min_std_window_f3+self.mvc_offset2,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100}'
-            line8 = f'Plantar improvement Pre/{self.lbl2}: {(round(mean_of_min_std_window_l3+self.mvc_offset2,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100}'
-            line9 = f'Dorsi improvement Pre/{self.lbl3}: {(round(mean_of_min_std_window_f2+self.mvc_offset3,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100}'
-            line10 = f'Plantar improvement Pre/{self.lbl3}: {(round(mean_of_min_std_window_l2+self.mvc_offset3,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100}'
+            line7 = f'Dorsi improvement Pre/{self.lbl2}: {(round(mean_of_min_std_window_f3+self.mvc_offset2,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100:.2f}'
+            line8 = f'Plantar improvement Pre/{self.lbl2}: {(round(mean_of_min_std_window_l3+self.mvc_offset2,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100:.2f}'
+            line9 = f'Dorsi improvement Pre/{self.lbl3}: {(round(mean_of_min_std_window_f2+self.mvc_offset3,2)-round(mean_of_min_std_window_f+self.mvc_offset,2))/round(mean_of_min_std_window_f+self.mvc_offset,2)*100:.2f}'
+            line10 = f'Plantar improvement Pre/{self.lbl3}: {(round(mean_of_min_std_window_l2+self.mvc_offset3,2)-round(mean_of_min_std_window_l+self.mvc_offset,2))/round(mean_of_min_std_window_l+self.mvc_offset,2)*100:.2f}'
             
             mvc_content = [line1,line3,line5,line2,line4,line6,line7,line8,line9,line10]
             # Convert the list to a string
@@ -1663,7 +1934,7 @@ class MainWindow(QMainWindow):
             self.canvas.draw()
 
 
-        elif button_index == 5:
+        elif button_index == 11 or button.text() == 'V3▶️' or button.text() == 'V2▶️' or button.text() == 'V1▶️':
 
             ################################## first data ################################
 
@@ -1675,7 +1946,40 @@ class MainWindow(QMainWindow):
             # Set the chart description in the QTextEdit box
             self.chart_description_box.setText(self.chart_description)
             
-            data_voluntary_w = pd.read_csv(self.data1_tv_directory[5])
+            
+            vol_csv_files = [file for file in os.listdir(self.data1_tv_directory[5]) if file.endswith('.csv')]
+            vol_csv_files2 = [file for file in os.listdir(self.data2_tv_directory[5]) if file.endswith('.csv')]
+            vol_csv_files3 = [file for file in os.listdir(self.data3_tv_directory[5]) if file.endswith('.csv')]
+            
+            data_voluntary_w = pd.read_csv(self.data1_tv_directory[5] + '\\'+ vol_csv_files[self.voltrialscounter])
+            if button.text() == 'V1▶️' and len(vol_csv_files)>1:
+                if len(vol_csv_files)-1 == self.voltrialscounter:
+                    self.voltrialscounter = 0
+                    data_voluntary_w = pd.read_csv(self.data1_tv_directory[5] + '\\'+vol_csv_files[self.voltrialscounter])
+                else:
+                    self.voltrialscounter +=1
+                    data_voluntary_w = pd.read_csv(self.data1_tv_directory[5] + '\\'+vol_csv_files[self.voltrialscounter])
+                    
+            data_voluntary_w3 = pd.read_csv(self.data3_tv_directory[5] + '\\'+vol_csv_files3[self.voltrialscounter2])
+            if button.text() == 'V2▶️' and len(vol_csv_files3)>1:
+                if len(vol_csv_files3)-1 == self.voltrialscounter2:
+                    self.voltrialscounter2 = 0
+                    data_voluntary_w3 = pd.read_csv(self.data3_tv_directory[5] + '\\'+vol_csv_files3[self.voltrialscounter2])
+                else:
+                    self.voltrialscounter2 +=1
+                    data_voluntary_w3 = pd.read_csv(self.data3_tv_directory[5] + '\\'+vol_csv_files3[self.voltrialscounter2])
+                    
+            data_voluntary_w2 = pd.read_csv(self.data2_tv_directory[5] + '\\'+vol_csv_files2[self.voltrialscounter3])
+            if button.text() == 'V3▶️' and len(vol_csv_files2)>1:
+                if len(vol_csv_files2)-1 == self.voltrialscounter3:
+                    self.voltrialscounter3 = 0
+                    data_voluntary_w2 = pd.read_csv(self.data2_tv_directory[5] + '\\'+vol_csv_files2[self.voltrialscounter3])
+                else:
+                    self.voltrialscounter3 +=1
+                    data_voluntary_w2 = pd.read_csv(self.data2_tv_directory[5] + '\\'+vol_csv_files2[self.voltrialscounter3])
+                
+            
+            #data_voluntary_w = pd.read_csv(self.data1_tv_directory[5])
             data_voluntary = data_voluntary_w['Position(rad)']
             
             # Apply moving average smoothing to X and Y data
@@ -1713,7 +2017,7 @@ class MainWindow(QMainWindow):
                     maxspeed = diff_maxspeed
                     extrema_with_max_speed = (maxima_indices[i], minima_indices[i])
 
-            print(extrema_with_max_speed)
+            #print(extrema_with_max_speed)
             min_value = data_voluntary_smoothed[extrema_with_max_diff[0]]
             max_value = data_voluntary_smoothed[extrema_with_max_diff[1]]
             min_value_str = f'{min_value:.2f}'
@@ -1723,7 +2027,7 @@ class MainWindow(QMainWindow):
 
             ################################## second data ################################
 
-            data_voluntary_w2 = pd.read_csv(self.data2_tv_directory[5])
+            #data_voluntary_w2 = pd.read_csv(self.data2_tv_directory[5])
             data_voluntary2 = data_voluntary_w2['Position(rad)']
 
             # Apply moving average smoothing to X and Y data
@@ -1765,7 +2069,7 @@ class MainWindow(QMainWindow):
         
             #print(len(Tminimas2))
             #print(len(minimas2))
-            print(extrema_with_max_speed2)
+            #print(extrema_with_max_speed2)
             
             min_value2 = data_voluntary_smoothed2[extrema_with_max_diff2[0]]
             max_value2 = data_voluntary_smoothed2[extrema_with_max_diff2[1]]
@@ -1774,7 +2078,7 @@ class MainWindow(QMainWindow):
             
             ################################## third data ################################
 
-            data_voluntary_w3 = pd.read_csv(self.data3_tv_directory[5])
+            #data_voluntary_w3 = pd.read_csv(self.data3_tv_directory[5])
             data_voluntary3 = data_voluntary_w3['Position(rad)']
 
             # Apply moving average smoothing to X and Y data
@@ -1812,7 +2116,7 @@ class MainWindow(QMainWindow):
                     maxspeed3 = diff_maxspeed3
                     extrema_with_max_speed3 = (maxima_indices3[i3], minima_indices3[i3])
 
-            print(extrema_with_max_speed3)
+            #print(extrema_with_max_speed3)
             min_value3 = data_voluntary_smoothed3[extrema_with_max_diff3[0]]
             max_value3 = data_voluntary_smoothed3[extrema_with_max_diff3[1]]
             min_value_str3 = f'{min_value3:.2f}'
@@ -1896,7 +2200,7 @@ class MainWindow(QMainWindow):
             #ax5.tight_layout()  # Adjust the layout to prevent overlapping
             self.canvas.draw()
 
-        elif button_index == 6:
+        elif button_index == 15:
             data_w = pd.read_csv(self.data1_tv_directory[0])
             data = (data_w['Position(rad)']*180/np.pi) + self.x_offset
             data2_w = pd.read_csv(self.data2_tv_directory[0])
@@ -1946,9 +2250,9 @@ class MainWindow(QMainWindow):
             line1 = f"NP {self.lbl1}: {abs(round(float(Neutralposition_tv_before),0))}"
             line2 = f"NP {self.lbl2}: {abs(round(float(Neutralposition_tv_post),0))}"
             line3 = f"NP {self.lbl3}: {abs(round(float(Neutralposition_tv_after),0))}"
-            line4 = f"ROM {self.lbl1}: {round(float(dorsi1 + plantar1),0)} %"
-            line5 = f"ROM {self.lbl2}: {round(float(dorsi3 + plantar3),0)} %"
-            line6 = f"ROM {self.lbl3}: {round(float(dorsi2 + plantar2),0)} %"
+            line4 = f"ROM {self.lbl1}: {round(float(dorsi1 + plantar1),0)} "
+            line5 = f"ROM {self.lbl2}: {round(float(dorsi3 + plantar3),0)} "
+            line6 = f"ROM {self.lbl3}: {round(float(dorsi2 + plantar2),0)} "
             #line7 = f"PI before/post: {round(float(plantarImprovementpost),0)} %"
             ROM_content = [line1,line2,line3,line4,line5,line6]
             # Convert the list to a string
